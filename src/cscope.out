@@ -1,0 +1,5117 @@
+cscope 15 $HOME/Programowanie/blessOS/original/src -c -q 0000000435 0000024609
+	@boot/boot.s
+
+1 [
+bits
+ 16]
+
+3 
+BOOTSEG
+ 
+	gequ
+ 0x07c0
+
+4 
+INITSEG
+ 
+	gequ
+ 0x9000
+
+5 
+SYSSEG
+ 
+	gequ
+ 0x1000
+
+6 
+SYSSIZE
+ 
+	gequ
+ 0x7000
+
+8 ; 
+first
+ 
+	glet
+'s move the boot code out of the way, so it won'
+	gt
+
+
+9 ; 
+be
+ 
+overwritten
+ 
+by
+ 
+the
+ 
+kernel
+ 
+code
+ 
+that
+ 
+is
+ 
+loaded
+ 
+	gat
+ 0x1000
+
+10 
+	gmove_boot
+:
+
+11 
+mov
+ 
+ax
+,
+BOOTSEG
+
+
+12 
+mov
+ 
+	gds
+,
+ax
+
+
+13 
+mov
+ 
+	gax
+,
+INITSEG
+
+
+14 
+mov
+ 
+	ges
+,
+ax
+
+
+15 
+xor
+ 
+	gsi
+,
+si
+
+
+16 
+xor
+ 
+	gdi
+,
+di
+
+
+17 
+mov
+ 
+	gcx
+,256
+
+18 
+rep
+
+
+19 
+movsw
+
+
+21 
+jmp
+ 
+	gINITSEG
+:
+start
+ ; 
+code
+ 
+is
+ 
+	gcopied
+, 
+jump
+ 
+to
+ 
+it
+
+
+23 
+	gstart
+:
+
+24 
+mov
+ 
+ax
+,
+cs
+
+
+25 
+mov
+ 
+	gds
+,
+ax
+
+
+26 
+mov
+ 
+	ges
+,
+ax
+
+
+27 
+mov
+ 
+	gss
+,
+ax
+
+
+28 
+mov
+ 
+	gsp
+,0x400 ; 
+stack
+ 
+	gis
+ 512
+KB
+ 
+away
+ 
+from
+ 
+the
+ 
+	gdata
+
+
+29 ; 
+print
+ 
+a
+ 
+message
+ 
+to
+ 
+the
+ 
+screen
+
+
+30 
+mov
+ 
+	gsi
+,
+msg
+
+
+31 
+call
+ 
+putstr
+
+
+33 
+mov
+ 
+	gax
+,
+SYSSEG
+
+
+34 
+mov
+ 
+	ges
+,
+ax
+
+
+35 
+call
+ 
+	gload_kernel
+ ; 
+loads
+ 
+kernel
+ 
+	gat
+ 0x10000
+
+36 
+call
+ 
+	gstop_motor
+
+
+38 ; 
+store
+ 
+the
+ 
+cursor
+ 
+position
+ 
+somewhere
+
+
+39 
+mov
+ 
+	gah
+,0x03
+
+40 
+xor
+ 
+	gbh
+,
+bh
+
+
+42 
+	gmov
+[510],
+	gdx
+ ; 
+store
+ 
+it
+ 
+	gin
+ 0x90510
+
+44 
+	gcli
+
+
+46 ; 
+Moves
+ 
+the
+ 
+system
+ 
+	gto
+ 0x0. 
+This
+ 
+overwrites
+ the 
+standard
+ 
+idt
+
+
+47 
+mov
+ 
+	gax
+,0x0000
+
+48 
+	gcld
+ ; 'direction'=0, 
+movs
+ 
+moves
+ 
+forward
+
+
+49 
+	gmove_kernel
+:
+
+50 
+mov
+ 
+es
+,
+ax
+
+
+51 
+add
+ 
+	gax
+,0x1000
+
+52 
+cmp
+ 
+	gax
+,0x9000
+
+53 
+jz
+ 
+end_kernel_move
+
+
+54 
+mov
+ 
+	gds
+,
+ax
+
+
+55 
+xor
+ 
+	gsi
+,
+si
+
+
+56 
+xor
+ 
+	gdi
+,
+di
+
+
+57 
+mov
+ 
+	gcx
+,0x8000
+
+58 
+rep
+
+
+59 
+movsw
+
+
+60 
+jmp
+ 
+move_kernel
+
+
+62 
+	gend_kernel_move
+:
+
+63 
+mov
+ 
+ax
+,
+cs
+
+
+64 
+mov
+ 
+	gds
+,
+ax
+
+
+66 
+	glgdt
+ [
+gdtr
+]
+
+67 
+	glidt
+ [
+idtr
+]
+
+69 ; 
+reprogram
+ 
+	gthe
+ 8259
+
+70 
+mov
+ 
+	gal
+, 0x11 ; 
+initialization
+ 
+sequence
+
+
+71 
+	gout
+ 0x20, 
+	gal
+ ; 
+send
+ 
+it
+ 
+to
+ 
+master
+
+
+72 
+	gdw
+ 0x00eb, 0x00eb
+
+73 
+	gout
+ 0xA0, 
+	gal
+ ; 
+send
+ 
+it
+ 
+to
+ 
+slave
+
+
+74 
+	gdw
+ 0x00eb, 0x00eb
+
+75 
+mov
+ 
+	gal
+, 0x20 ; 
+start
+ 
+of
+ 
+hardware
+ 
+interrupts
+ (#1)
+
+76 
+	gout
+ 0x21, 
+al
+
+
+77 
+	gdw
+ 0x00eb, 0x00eb
+
+78 
+mov
+ 
+	gal
+, 0x28 ; 
+start
+ 
+of
+ 
+hardware
+ 
+interrupts
+ (#2)
+
+79 
+	gout
+ 0xa1, 
+al
+
+
+80 
+	gdw
+ 0x00eb, 0x00eb
+
+81 
+mov
+ 
+	gal
+, 0x04 ; 8259-1 
+is
+ 
+master
+
+
+82 
+	gout
+ 0x21, 
+al
+
+
+83 
+	gdw
+ 0x00eb, 0x00eb
+
+84 
+mov
+ 
+	gal
+, 0x02 ; 8259-2 
+is
+ 
+slave
+
+
+85 
+	gout
+ 0xa1, 
+al
+
+
+86 
+	gdw
+ 0x00eb, 0x00eb
+
+87 
+mov
+ 
+	gal
+, 0x01 ; 8086 
+mode
+ for 
+both
+
+
+88 
+	gout
+ 0x21, 
+al
+
+
+89 
+	gdw
+ 0x00eb, 0x00eb
+
+90 
+	gout
+ 0xa1, 
+al
+
+
+91 
+	gdw
+ 0x00eb, 0x00eb
+
+92 
+mov
+ 
+	gal
+, 0xff ; 
+mask
+ 
+off
+ 
+all
+ 
+interrupts
+ for 
+now
+
+
+93 
+	gout
+ 0x21, 
+al
+
+
+94 
+	gdw
+ 0x00eb, 0x00eb
+
+95 
+	gout
+ 0xa1, 
+al
+
+
+97 
+mov
+ 
+	geax
+,
+cr0
+
+
+98 
+or
+ 
+	gal
+,1
+
+99 
+mov
+ 
+	gcr0
+,
+eax
+
+
+101 
+	gjmp
+ 0x0008:
+do_pm
+
+
+103 
+hang
+:
+
+104 
+jmp
+ 
+$
+
+
+106 ; 
+writes
+ 
+a
+ 
+character
+ 
+on
+ 
+	gscreen
+
+
+107 ; 
+	gsi
+ = 
+address
+ 
+of
+ 
+message
+ 
+to
+ 
+be
+ 
+printed
+
+
+108 ; 
+	gNOTE
+: 
+message
+ 
+must
+ 
+end
+ 
+with
+ 
+ASCII
+ 
+character
+ 0!
+
+109 
+putstr
+:
+
+110 
+lodsb
+ ; 
+	gAL
+ = 
+DS
+:
+SI
+
+
+111 
+or
+ 
+al
+,al
+
+112 
+	gjz
+ .
+done
+
+
+113 
+mov
+ 
+	gah
+,0x0e
+
+114 
+mov
+ 
+	gbx
+,01110000b
+
+116 
+jmp
+ 
+	gputstr
+
+
+118 .
+	gdone
+:
+
+119 
+ret
+
+
+121 ; 
+load
+ 
+the
+ 
+kernel
+ 
+into
+ 
+memory
+ 
+	gat
+ 0x10000
+
+122 ; 
+	gES
+ - 
+segment
+ 
+to
+ 
+which
+ 
+we
+ 
+should
+ 
+write
+ 
+the
+ 
+	gdata
+
+
+123 ; 
+	gBX
+ - 
+index
+ 
+in
+ 
+that
+ 
+	gsegment
+
+
+124 ; 
+	gsectors
+ - 
+already
+ 
+loaded
+ 
+sectors
+ 
+of
+ 
+current
+ 
+track
+ (
+initially
+ 1 
+because
+ of 
+the
+ 
+bootcode
+)
+
+125 ; 
+	ghead
+ - 
+currently
+ 
+used
+ head
+
+126 ; 
+	gtrack
+ - 
+currently
+ 
+used
+ 
+track
+
+
+128 
+ENDSEG
+ 
+equ
+ 
+	gSYSSEG
+ + 
+SYSSIZE
+
+
+129 
+TOTALSECTORS
+ 
+	gequ
+ 18
+
+131 
+sectors
+ 
+	gdw
+ 1
+
+132 
+head
+ 
+	gdw
+ 0
+
+133 
+track
+ 
+	gdw
+ 0
+
+135 
+	gload_kernel
+:
+
+136 
+mov
+ 
+ax
+, 
+es
+
+
+137 
+test
+ 
+	gax
+, 0x0fff ; 
+check
+ if 
+	git
+'s on segment boundary (64Kb)
+
+139 .
+	gdie
+:
+
+140 
+jne
+ .
+die
+
+
+142 
+xor
+ 
+bx
+, 
+	gbx
+
+
+143 .
+	grepeat_read
+: ; 
+test
+ if 
+the
+ 
+full
+ 
+kernel
+ 
+is
+ 
+loaded
+
+
+144 
+mov
+ 
+	gax
+, 
+es
+
+
+145 
+cmp
+ 
+	gax
+, 
+ENDSEG
+
+
+146 
+	gjb
+ .
+	gcalc_sectors
+ ; if 
+not
+ 
+start
+ 
+loading
+ 
+but
+ 
+first
+ 
+calc
+ 
+sectors
+
+
+147 
+	gret
+ ; 
+otherwise
+ 
+we
+ 
+can
+ return
+
+149 .
+	gcalc_sectors
+:
+
+150 
+mov
+ 
+ax
+, 
+TOTALSECTORS
+
+
+151 
+sub
+ 
+	gax
+, [
+sectors
+]
+
+152 
+mov
+ 
+	gcx
+, 
+ax
+
+
+153 
+shl
+ 
+	gcx
+, 9 ; 
+calc
+ 
+number
+ 
+of
+ 
+bytes
+ 
+to
+ 
+be
+ 
+read
+
+
+154 
+add
+ 
+	gcx
+, 
+bx
+
+
+155 
+	gjnc
+ .
+read_track
+
+
+156 
+	gje
+ .
+read_track
+
+
+157 
+xor
+ 
+	gax
+, 
+ax
+
+
+158 
+sub
+ 
+	gax
+, 
+bx
+
+
+159 
+shr
+ 
+	gax
+, 9
+
+161 .
+	gread_track
+:
+
+162 
+call
+ 
+read_sectors
+
+
+163 
+mov
+ 
+cx
+, 
+ax
+
+
+164 
+add
+ 
+	gax
+, [
+sectors
+]
+
+165 
+cmp
+ 
+	gax
+, 
+TOTALSECTORS
+
+
+166 
+	gjne
+ .
+update
+
+
+167 
+mov
+ 
+	gax
+, 1
+
+168 
+sub
+ 
+	gax
+, [
+head
+]
+
+169 
+	gjne
+ .
+change_head
+
+
+170 
+inc
+ 
+	gword
+ [
+track
+]
+
+172 .
+	gchange_head
+:
+
+173 
+mov
+ [
+head
+], 
+ax
+
+
+174 
+xor
+ 
+	gax
+, ax
+
+176 .
+	gupdate
+:
+
+177 
+mov
+ [
+sectors
+], 
+ax
+
+
+178 
+shl
+ 
+	gcx
+, 9
+
+179 
+add
+ 
+	gbx
+, 
+cx
+
+
+180 
+	gjnc
+ .
+repeat_read
+
+
+181 
+mov
+ 
+	gax
+, 
+es
+
+
+182 
+add
+ 
+	gax
+, 0x1000
+
+183 
+mov
+ 
+	ges
+, 
+ax
+
+
+184 
+xor
+ 
+	gbx
+, 
+bx
+
+
+185 
+	gjmp
+ .
+repeat_read
+
+
+187 
+	gread_sectors
+:
+
+188 
+push
+ 
+ax
+
+
+189 
+push
+ 
+bx
+
+
+190 
+push
+ 
+cx
+
+
+191 
+push
+ 
+dx
+
+
+192 
+mov
+ 
+dx
+, [
+track
+]
+
+193 
+mov
+ 
+	gcx
+, [
+sectors
+]
+
+194 
+inc
+ 
+cx
+
+
+195 
+mov
+ 
+	gch
+, 
+dl
+
+
+196 
+mov
+ 
+	gdx
+, [
+head
+]
+
+197 
+mov
+ 
+	gdh
+, 
+dl
+
+
+198 
+mov
+ 
+	gdl
+, 0
+
+199 
+and
+ 
+	gdx
+, 0x0100
+
+200 
+mov
+ 
+	gah
+, 2
+
+202 
+	gjc
+ .
+bad_rt
+
+
+203 
+pop
+ 
+dx
+
+
+204 
+pop
+ 
+cx
+
+
+205 
+pop
+ 
+bx
+
+
+206 
+pop
+ 
+ax
+
+
+207 
+	gret
+
+
+209 .
+	gbad_rt
+:
+
+210 
+mov
+ 
+ax
+, 0
+
+211 
+mov
+ 
+	gdx
+, 0
+
+213 
+pop
+ 
+dx
+
+
+214 
+pop
+ 
+cx
+
+
+215 
+pop
+ 
+bx
+
+
+216 
+pop
+ 
+ax
+
+
+217 
+jmp
+ 
+read_sectors
+
+
+219 
+	gstop_motor
+:
+
+220 
+push
+ 
+dx
+
+
+221 
+mov
+ 
+dx
+, 0x3f2
+
+222 
+mov
+ 
+	gal
+, 0
+
+223 
+out
+ 
+	gdx
+, 
+al
+
+
+224 
+pop
+ 
+dx
+
+
+225 
+	gret
+
+
+227 [
+BITS
+ 32]
+
+228 
+	gdo_pm
+:
+
+229 
+mov
+ 
+ax
+,
+SYS_DATA_SEL
+
+
+230 
+mov
+ 
+	gds
+,
+ax
+
+
+231 
+mov
+ 
+	ges
+,
+ax
+
+
+232 
+mov
+ 
+	gss
+,
+ax
+
+
+233 
+mov
+ 
+	gfs
+,
+ax
+
+
+234 
+mov
+ 
+	ggs
+,
+ax
+
+
+236 
+mov
+ 
+	gesp
+, 0xa500
+
+238 
+	gjmp
+ 0x08:0x00
+
+240 [
+BITS
+ 16]
+
+242 
+gdtr
+:
+
+243 
+dw
+ 
+gdt_end
+ - 
+gdt
+ - 1
+
+244 
+dw
+ 
+gdt
+,0x9 ; 
+the
+ gdt 
+table
+ 
+is
+ 
+at
+ 
+	gsegment
+ 0x90000
+
+246 
+	ggdt
+:
+
+247 
+times
+ 8 
+db
+ 0 ; 
+dummy
+ 
+used
+ 
+by
+ 
+Intel
+ 
+only
+
+
+249 
+SYS_CODE_SEL
+ 
+equ
+ 
+	g$
+ - 
+gdt
+
+
+250 
+	gdw
+ 0x07FF
+
+251 
+	gdw
+ 0
+
+252 
+	gdb
+ 0
+
+253 
+	gdb
+ 0x9A
+
+254 
+	gdb
+ 0xC0
+
+255 
+	gdb
+ 0
+
+257 
+SYS_DATA_SEL
+ 
+equ
+ 
+	g$
+ - 
+gdt
+
+
+258 
+	gdw
+ 0x07FF
+
+259 
+	gdw
+ 0
+
+260 
+	gdb
+ 0
+
+261 
+	gdb
+ 0x92
+
+262 
+	gdb
+ 0xC0
+
+263 
+	gdb
+ 0
+
+265 
+SYS_CODE_SEL_2
+ 
+equ
+ 
+	g$
+ - 
+gdt
+
+
+266 
+	gdw
+ 0x07ff
+
+267 
+	gdw
+ 0x0000
+
+268 
+	gdb
+ 9
+
+269 
+	gdb
+ 0x9a
+
+270 
+	gdb
+ 0xc0
+
+271 
+	gdb
+ 0
+
+273 
+SYS_DATA_SEL_2
+ 
+equ
+ 
+	g$
+ - 
+gdt
+
+
+274 
+	gdw
+ 0x07ff
+
+275 
+	gdw
+ 0x0000
+
+276 
+	gdb
+ 9
+
+277 
+	gdb
+ 0x92
+
+278 
+	gdb
+ 0xc0
+
+279 
+	gdb
+ 0
+
+281 
+	ggdt_end
+:
+
+283 
+idtr
+:
+
+284 
+dw
+ 
+idt_end
+ - 
+idt
+ - 1
+
+285 
+dw
+ 
+idt
+, 0x9 ; 
+the
+ idt 
+table
+ 
+is
+ 
+at
+ 
+	gsegment
+ 0x90000
+
+287 
+	gidt
+:
+
+288 
+db
+ 0
+
+289 
+idt_end
+:
+
+291 
+msg
+ 
+db
+ 13,10,'Loading System...',13,10,0
+
+293 
+	gtimes
+ 510-(
+	g$
+-
+	g$$
+) 
+	gdb
+ 0
+
+294 
+	gdw
+ 0xaa55 ; 
+bootcode
+ 
+	gstamp
+
+
+	@boot/setup.s
+
+1 .
+	gcode32
+
+
+2 .
+	gtext
+
+
+3 .
+globl
+ 
+	gstartup_32
+, 
+	ggdt
+, 
+	gidt
+, 
+	gpg_dir
+
+
+4 .extern 
+main
+
+
+5 .
+org
+ 0
+
+7 #paging 
+directory
+ 
+is
+ 
+going
+ 
+to
+ 
+start
+ 
+from
+ 0x0 
+and
+ is going to 
+overwrite
+ 
+following
+ 
+code
+
+
+8 
+pg_dir
+:
+
+9 
+startup_32
+:
+
+10 
+movl
+ 
+$0x10
+,%
+eax
+
+
+11 
+mov
+ %
+ax
+,%
+ds
+
+
+12 
+mov
+ %
+ax
+,%
+es
+
+
+13 
+mov
+ %
+ax
+,%
+fs
+
+
+14 
+mov
+ %
+ax
+,%
+gs
+
+
+16 
+call
+ 
+setup_gdt
+
+
+17 
+call
+ 
+setup_idt
+
+
+19 
+movl
+ 
+$0x10
+,%
+eax
+
+
+20 
+movw
+ %
+ax
+,%
+ds
+
+
+21 
+movw
+ %
+ax
+,%
+es
+
+
+22 
+movw
+ %
+ax
+,%
+fs
+
+
+23 
+movw
+ %
+ax
+,%
+gs
+
+
+24 
+movw
+ %
+ax
+,%
+ss
+
+
+25 
+movl
+ 
+$0xa0000
+,%
+esp
+
+
+27 
+movl
+ 
+$msg
+,%
+esi
+
+
+28 
+movl
+ 
+$0xb8000
+,%
+edi
+
+
+29 
+movl
+ 
+$10
+,%
+ecx
+
+
+30 
+repeat
+:
+
+31 
+movb
+ (%
+esi
+),%
+al
+
+
+32 
+movb
+ %
+al
+,(%
+edi
+)
+
+33 
+addl
+ 
+$1
+,%
+edi
+
+
+34 
+movb
+ 
+$0x07
+,%
+al
+
+
+35 
+movb
+ %
+al
+,(%
+edi
+)
+
+36 
+addl
+ 
+$1
+,%
+esi
+
+
+37 
+addl
+ 
+$1
+,%
+edi
+
+
+38 
+decw
+ %
+cx
+
+
+39 
+jnz
+ 
+repeat
+
+
+41 
+xorl
+ %
+eax
+,%eax
+
+42 1: 
+incl
+ %
+eax
+ #test 
+the
+ 
+A20
+ 
+line
+, if 
+it
+'s enabled
+
+43 
+movl
+ %
+eax
+,0x000000
+
+44 
+cmpl
+ %
+eax
+,0x100000
+
+45 
+je
+ 1b
+
+46 
+movl
+ %
+cr0
+,%
+eax
+ #looking for 
+the
+ 
+math
+ 
+chip
+
+
+47 
+andl
+ 
+$0x80000011
+,%
+eax
+
+
+48 
+testl
+ 
+$0x10
+,%
+eax
+
+
+49 
+jne
+ 1f #ET 
+is
+ 
+set
+ - 387 is 
+present
+
+
+50 
+orl
+ 
+$4
+,%
+eax
+ #else set emulate bit
+
+51 1: 
+movl
+ %
+eax
+,%
+cr0
+
+
+52 
+jmp
+ 
+start_main
+
+
+54 
+boom
+:
+
+55 
+nop
+
+
+56 
+jmp
+ 
+boom
+
+
+58 .
+align
+ 2
+
+59 
+setup_idt
+:
+
+60 
+lea
+ 
+ignore_int
+,%
+edx
+
+
+61 
+movl
+ 
+$0x00080000
+,%
+eax
+
+
+62 
+movw
+ %
+dx
+,%
+ax
+
+
+63 
+movw
+ 
+$0x8E00
+,%
+dx
+
+
+65 
+lea
+ 
+idt
+,%
+edi
+
+
+66 
+movl
+ 
+$256
+,%
+ecx
+
+
+67 
+repeat_load_idt
+:
+
+68 
+movl
+ %
+eax
+,(%
+edi
+)
+
+69 
+movl
+ %
+edx
+,4(%
+edi
+)
+
+70 
+addl
+ 
+$8
+,%
+edi
+
+
+71 
+decl
+ %
+ecx
+
+
+72 
+jne
+ 
+repeat_load_idt
+
+
+73 
+lidt
+ 
+idt_descr
+
+
+74 
+ret
+
+
+76 
+setup_gdt
+:
+
+77 
+lgdt
+ 
+gdt_descr
+
+
+78 
+ret
+
+
+80 .
+org
+ 0x1000
+
+81 
+pg0
+:
+
+83 .
+org
+ 0x2000
+
+84 
+pg1
+:
+
+86 .
+org
+ 0x3000
+
+87 
+pg2
+:
+
+89 .
+org
+ 0x4000
+
+90 
+start_main
+:
+
+91 
+sti
+
+
+92 
+pushl
+ 
+$0
+
+
+93 
+pushl
+ 
+$0
+
+
+94 
+pushl
+ 
+$0
+
+
+95 
+pushl
+ 
+$boom
+
+
+96 
+pushl
+ 
+$main
+
+
+97 
+jmp
+ 
+setup_paging
+
+
+99 .
+align
+ 2
+
+100 
+setup_paging
+:
+
+101 
+movl
+ 
+$1024
+*3,%
+ecx
+
+
+102 
+xorl
+ %
+eax
+,%eax
+
+103 
+xorl
+ %
+edi
+,%edi
+
+104 
+cld
+;
+	grep
+;
+stosl
+
+
+105 
+movl
+ 
+	g$pg0
++7,
+pg_dir
+
+
+106 
+movl
+ 
+	g$pg1
++7,
+	gpg_dir
++4
+
+107 
+movl
+ 
+	g$pg1
++4092,%
+edi
+
+
+108 
+movl
+ 
+	g$0x7ff007
+,%
+eax
+
+
+109 
+	gstd
+
+
+110 1: 
+stosl
+
+
+111 
+subl
+ 
+$0x1000
+,%
+eax
+
+
+112 
+	gjge
+ 1b
+
+113 
+	gxorl
+ %
+	geax
+,%
+eax
+
+
+114 
+	gmovl
+ %
+	geax
+,%
+cr3
+
+
+115 
+	gmovl
+ %
+	gcr0
+,%
+eax
+
+
+116 
+orl
+ 
+	g$0x80000000
+,%
+eax
+
+
+117 
+	gmovl
+ %
+	geax
+,%
+cr0
+
+
+118 
+call
+ 
+main
+
+
+120 
+	gignore_int
+:
+
+121 
+incb
+ 0xb8000+160
+
+122 
+movb
+ 
+$2
+,0xb8000+161
+
+123 
+iret
+
+
+125 
+	gidt_descr
+:
+
+126 .
+word
+ 256*8-1
+
+127 .long 
+idt
+
+
+129 
+idt
+:
+
+130 .
+fill
+ 256, 8, 0
+
+132 
+	ggdt_descr
+:
+
+133 .
+word
+ 256*8-1
+
+134 .long 
+gdt
+
+
+136 
+gdt
+:
+
+137 .
+quad
+ 0x00
+
+138 .
+quad
+ 0x00C09A00000007FF
+
+139 .
+quad
+ 0x00C09200000007FF
+
+140 .
+quad
+ 0x00
+
+141 .
+fill
+ 252,8,0
+
+143 
+	gmsg
+:
+
+144 .
+ascii
+ "Hell Yeah!"
+
+	@include/asm/io.h
+
+1 #define 
+	#outb
+(
+value
+,
+port
+) \
+
+2 
+	`asm
+("outb %%al,%%dx"::"a" (
+value
+),"d" (
+port
+))
+
+	)
+
+4 #define 
+	#inb
+(
+port
+) ({ \
+
+5 unsigned char 
+_v
+; \
+
+6 
+asm
+ volatile ("inb %%dx,%%al":"=a" (
+_v
+):"d" (
+port
+)); \
+
+7 
+_v
+; \
+
+8 })
+
+	)
+
+10 #define 
+	#outb_p
+(
+value
+,
+port
+) \
+
+11 
+	`asm
+("outb %%al,%%dx\n" \
+
+14 "1:"::"a" (
+value
+),"d" (
+port
+))
+
+	)
+
+16 #define 
+	#inb_p
+(
+port
+) ({ \
+
+17 unsigned char 
+_v
+; \
+
+18 
+asm
+ volatile ("inb %%dx,%%al\n" \
+
+21 "1:":"=a" (
+_v
+):"d" (
+port
+)); \
+
+22 
+_v
+; \
+
+23 })
+
+	)
+
+	@include/console.h
+
+1 #ifndef 
+CONSOLE_H
+
+
+2 #define 
+	#CONSOLE_H
+
+
+	)
+
+4 #define 
+	#MAX_LINES
+ 25
+
+	)
+
+5 #define 
+	#MAX_COLUMNS
+ 80
+
+	)
+
+7 #define 
+	#VRAM_LINE
+ (
+MAX_COLUMNS
+ * 2)
+
+	)
+
+9 #define 
+	#VRAM
+ 0xB8000
+
+	)
+
+11 #define 
+	#VRAM_OFFSET
+(
+x
+,
+y
+) (
+VRAM_LINE
+*(y)+2*(x))
+
+	)
+
+13 #define 
+	#TAB_WIDTH
+ 8
+
+	)
+
+15 typedef enum 
+	eCOLOUR_ATTR
+
+
+17 
+	mBLACK
+, 
+	mBLUE
+, 
+	mGREEN
+, 
+	mCYAN
+, 
+	mRED
+, 
+	mMAGENTA
+, 
+	mBROWN
+,
+
+18 
+	mLIGHT_GRAY
+, 
+	mDARK_GRAY
+, 
+	mLIGHT_BLUE
+, 
+	mLIGHT_GREEN
+,
+
+19 
+	mLIGHT_CYAN
+, 
+	mLIGHT_RED
+, 
+	mLIGHT_MAGENTA
+, 
+	mYELLOW
+, 
+	mWHITE
+
+
+20 } 
+	tCOLOUR
+;
+
+22 void 
+set_cursor
+(int 
+x
+, int 
+y
+);
+
+23 void 
+get_cursor
+(int *
+x
+, int *
+y
+);
+
+24 void 
+print_char
+(char 
+c
+, 
+COLOUR
+ 
+fg
+, COLOUR 
+bkg
+);
+
+	@include/descriptors.h
+
+1 #ifndef 
+_DESCRIPTORS__INCLUDED_
+
+
+2 #define 
+	#_DESCRIPTORS__INCLUDED_
+
+
+	)
+
+5 typedef struct 
+	sdesc_struct
+
+
+7 unsigned long 
+	ma
+, 
+	mb
+;
+
+8 } 
+	tdesc_table
+[256];
+
+11 extern 
+desc_table
+ 
+gdt
+, 
+idt
+;
+
+14 extern unsigned long 
+pg_dir
+[1024];
+
+16 #define 
+	#GDT_NULL
+ 0
+
+	)
+
+17 #define 
+	#GDT_CODE
+ 1
+
+	)
+
+18 #define 
+	#GDT_DATA
+ 2
+
+	)
+
+19 #define 
+	#GDT_TMP
+ 3
+
+	)
+
+21 #define 
+	#LDT_NULL
+ 0
+
+	)
+
+22 #define 
+	#LDT_CODE
+ 1
+
+	)
+
+23 #define 
+	#LDT_DATA
+ 2
+
+	)
+
+	@include/kernel/libcc.h
+
+3 #ifndef 
+LIBCC_H
+
+
+4 #define 
+	#LIBCC_H
+
+
+	)
+
+6 #define 
+	#NULL
+ ((void *)0)
+
+	)
+
+8 void 
+bcopy
+(const void *
+src
+, void *
+dest
+, unsigned int 
+n
+);
+
+9 void 
+bzero
+(void *
+dest
+, unsigned int 
+n
+);
+
+10 void *
+memcpy
+(void *
+dest
+, const void *
+src
+, unsigned int 
+n
+);
+
+11 void *
+memset
+(void *
+dest
+, int 
+c
+, unsigned int 
+n
+);
+
+12 int 
+memcmp
+(const void *
+s1
+, const void *
+s2
+, unsigned int 
+n
+);
+
+13 int 
+strcmp
+(const char *
+s1
+, const char *
+s2
+);
+
+14 char *
+strcpy
+(char *
+dest
+, const char *
+src
+);
+
+15 unsigned int 
+strlen
+(const char *
+s
+);
+
+17 #define 
+	#assert
+(
+s
+) do { if (! (s)) { \
+
+18 
+	`kprintf
+(
+KPL_PANIC
+, "ASSERT: %s, %d", 
+__FILE__
+, 
+__LINE__
+); \
+
+19 
+	`halt
+(); \
+
+20 }} while (0)
+
+	)
+
+	@include/kernel/printk.h
+
+1 #ifndef 
+_PRINTK__INCLUDED_
+
+
+2 #define 
+	#_PRINTK__INCLUDED_
+
+
+	)
+
+4 #include 
+	~"kernel/scr.h
+"
+
+6 enum 
+	eKP_LEVEL
+ { 
+	mKPL_DUMP
+, 
+	mKPL_PANIC
+ };
+
+8 void 
+printk
+(enum 
+KP_LEVEL
+ 
+lvl
+, const char *
+fmt
+, ...);
+
+	@include/kernel/scr.h
+
+1 #ifndef 
+SCR_H
+
+
+2 #define 
+	#SCR_H
+
+
+	)
+
+4 #define 
+	#MAX_LINES
+ 25
+
+	)
+
+5 #define 
+	#MAX_COLUMNS
+ 80
+
+	)
+
+6 #define 
+	#TAB_WIDTH
+ 8
+
+	)
+
+10 #define 
+	#VIDEO_RAM
+ 0xb8000
+
+	)
+
+12 #define 
+	#LINE_RAM
+ (
+MAX_COLUMNS
+*2)
+
+	)
+
+14 #define 
+	#PAGE_RAM
+ (
+MAX_LINE
+*
+MAX_COLUMNS
+)
+
+	)
+
+16 #define 
+	#BLANK_CHAR
+ (' ')
+
+	)
+
+17 #define 
+	#BLANK_ATTR
+ (0x07)
+
+	)
+
+19 #define 
+	#CHAR_OFF
+(
+x
+,
+y
+) (
+LINE_RAM
+*(y)+2*(x))
+
+	)
+
+21 typedef enum 
+	eCOLOUR_TAG
+ {
+
+22 
+	mBLACK
+, 
+	mBLUE
+, 
+	mGREEN
+, 
+	mCYAN
+, 
+	mRED
+, 
+	mMAGENTA
+, 
+	mBROWN
+, 
+	mWHITE
+,
+
+23 
+	mGRAY
+, 
+	mLIGHT_BLUE
+, 
+	mLIGHT_GREEN
+, 
+	mLIGHT_CYAN
+,
+
+24 
+	mLIGHT_RED
+, 
+	mLIGHT_MAGENTA
+, 
+	mYELLOW
+, 
+	mBRIGHT_WHITE
+
+
+25 } 
+	tCOLOUR
+;
+
+27 void 
+set_cursor
+(int, int);
+
+28 void 
+get_cursor
+(int *, int *);
+
+29 void 
+print_c
+(char, 
+COLOUR
+, COLOUR);
+
+	@include/kprint.h
+
+1 #ifndef 
+KPRINT_H
+
+
+2 #define 
+	#KPRINT_H
+
+
+	)
+
+4 #include 
+	~<console.h
+>
+
+6 enum 
+	gKP_LEVEL
+ = { 
+KP_DUMP
+, 
+KP_PANIC
+ };
+
+8 void 
+printk
+(enum 
+KP_LEVEL
+ 
+log_lvl
+, const char *
+fmt
+, ...);
+
+	@include/types.h
+
+3 typedef unsigned char 
+	tuint8_t
+;
+
+4 typedef unsigned short 
+	tuint16_t
+;
+
+5 typedef unsigned int 
+	tuint32_t
+;
+
+	@init/main.c
+
+1 int 
+	$main
+()
+
+3 int 
+count
+ = 0;
+
+4 int 
+i
+ = 0;
+
+5 unsigned char *
+videoram
+ = (unsigned char *) 0xB8000;
+
+17 
+i
+ = 0;
+
+18 
+count
+ = 0;
+
+19 while(
+hello
+[
+i
+] != '\0')
+
+21 
+videoram
+[
+count
+++] = 
+hello
+[
+i
+++];
+
+22 
+videoram
+[
+count
+++] = 0x07;
+
+28 
+	}
+}
+
+	@kernel/console.c
+
+1 #include 
+	~<asm.h
+>
+
+2 #include 
+	~<console.h
+>
+
+4 static int 
+	gcur_x
+ = 0;
+
+5 static int 
+	gcur_y
+ = 0;
+
+7 void 
+	$set_cursor
+(int 
+x
+, int 
+y
+)
+
+9 
+cur_x
+ = 
+x
+;
+
+10 
+cur_y
+ = 
+y
+;
+
+11 
+	`outb
+(0x0e, 0x3d4);
+
+12 
+	`outb
+((((
+cur_x
+ + 
+cur_y
+ * 
+MAX_COLUMNS
+) >> 8) && 0xff), 0x3d5);
+
+13 
+	`outb
+(0x0f, 0x3d4);
+
+14 
+	`outb
+((((
+cur_x
+ + 
+cur_y
+ * 
+MAX_COLUMNS
+)) && 0xff), 0x3d5);
+
+15 
+	}
+}
+
+17 void 
+get_cursor
+(int *
+x
+, int *
+y
+);
+
+19 *
+	gx
+ = 
+cur_x
+;
+
+20 *
+	gy
+ = 
+cur_y
+;
+
+23 static void 
+	$scroll_down
+(unsigned int 
+lines
+)
+
+26 
+	`memcpy
+((void *)(
+VRAM
+), (void *)(VRAM + 
+LINE_RAM
+ * 
+lines
+), LINE_RAM * (
+MAX_LINES
+ - lines));
+
+27 unsigned short *
+p
+ = (unsigned char *)(
+VRAM
+ + 
+LINE_RAM
+ * (
+MAX_LINES
+ - 
+lines
+));
+
+28 int 
+i
+ = 
+MAX_COLUMNS
+ * 
+lines
+ - 1;
+
+29 for (; 
+i
+ > 0; --i)
+
+31 *
+p
+++ = 0x0720;
+
+33 
+	}
+}
+
+35 void 
+	$print_char
+(char 
+c
+, 
+COLOUR
+ 
+fg
+, COLOUR 
+bkg
+)
+
+37 unsigned char *
+p
+ = (unsigned char *)(
+VRAM
+ + 
+	`VRAM_OFFSET
+(
+cur_x
+, 
+cur_y
+));
+
+38 unsigned char 
+attribute
+ = ((
+fg
+ << 4) | 
+bkg
+);
+
+40 switch (
+c
+)
+
+43 
+cur_x
+ = 0;
+
+46 for (; 
+cur_x
+ < 
+MAX_COLUMNS
+; ++cur_x)
+
+48 *
+p
+++ = 0x20;
+
+49 *
+p
+++ = 
+attribute
+;
+
+53 
+c
+ = 
+cur_x
+ + 
+TAB_WIDTH
+ - (cur_x & (TAB_WIDTH - 1));
+
+54 
+c
+ = c < 
+MAX_COLUMNS
+ ? c : MAX_COLUMNS;
+
+55 for (; 
+cur_x
+ < 
+c
+; ++cur_x)
+
+57 *
+p
+++ = 0x20;
+
+58 *
+p
+++ = 
+attribute
+;
+
+62 if (!
+cur_x
+ && !
+cur_y
+)
+
+64 if (!
+cur_x
+)
+
+66 
+cur_x
+ = 
+MAX_COLUMNS
+ - 1;
+
+67 
+cur_y
+--;
+
+69 
+cur_x
+--;
+
+70 ((short *)
+p
+)[-1] = 0x0720;
+
+74 *
+p
+++ = 
+c
+;
+
+75 *
+p
+++ = 
+attribute
+;
+
+76 
+cur_x
+;
+
+80 if (
+cur_x
+ >= 
+MAX_COLUMNS
+)
+
+82 
+cur_x
+ = 0;
+
+83 if (
+cur_y
+ < 
+MAX_LINES
+-1)
+
+84 
+cur_y
+++;
+
+86 
+	`scroll_down
+(1);
+
+88 
+	`set_cursor
+(
+cur_x
+, 
+cur_y
+);
+
+89 
+	}
+}
+
+	@kernel/kprint.c
+
+1 #include 
+	~<kprint.h
+>
+
+3 #define 
+	#va_rounded_size
+(
+type
+) \
+
+4 (((sizeof(
+type
+) + sizeof(int) - 1) / sizeof(int)) * sizeof(int))
+
+	)
+
+6 #define 
+	#va_start
+(
+ap
+, 
+last_arg
+) \
+
+7 (
+ap
+ = (char *)&
+last_arg
+ + 
+	`va_rounded_size
+(last_arg))
+
+	)
+
+9 #define 
+	#va_next
+(
+ap
+, 
+type
+) \
+
+10 (((
+type
+ *)(
+ap
+ += 
+	`va_rounded_size
+(type)))[-1])
+
+	)
+
+12 #define 
+	#va_end
+(
+ap
+) \
+
+13 (
+ap
+)
+
+	)
+
+15 void 
+printk
+(enum
+
+	@kernel/libcc.c
+
+3 #include 
+	~"kernel/libcc.h
+"
+
+7 
+	$bcopy
+(const void *
+src
+, void *
+dest
+, unsigned int 
+n
+) {
+
+8 const char *
+s
+ = (const char *)
+src
+;
+
+9 char *
+d
+ = (char *)
+dest
+;
+
+10 if (
+s
+ <= 
+d
+)
+
+11 for (; 
+n
+>0; --n)
+
+12 
+d
+[
+n
+-1] = 
+s
+[n-1];
+
+14 for (; 
+n
+>0; --n)
+
+15 *
+d
+++ = *
+s
+++;
+
+16 
+	}
+}
+
+19 
+	$bzero
+(void *
+dest
+, unsigned int 
+n
+) {
+
+20 
+	`memset
+(
+dest
+, 0, 
+n
+);
+
+21 
+	}
+}
+
+24 
+	$memcpy
+(void *
+dest
+, const void *
+src
+, unsigned int 
+n
+) {
+
+25 
+	`bcopy
+(
+src
+, 
+dest
+, 
+n
+);
+
+26 return 
+dest
+;
+
+27 
+	}
+}
+
+30 
+	$memset
+(void *
+dest
+, int 
+c
+, unsigned int 
+n
+) {
+
+31 char *
+d
+ = (char *)
+dest
+;
+
+32 for (; 
+n
+>0; --n)
+
+33 *
+d
+++ = (char)
+c
+;
+
+34 return 
+dest
+;
+
+35 
+	}
+}
+
+38 
+	$memcmp
+(const void *
+s1
+, const void *
+s2
+, unsigned int 
+n
+) {
+
+39 const char *
+s3
+ = (const char *)
+s1
+;
+
+40 const char *
+s4
+ = (const char *)
+s2
+;
+
+41 for (; 
+n
+>0; --n) {
+
+42 if (*
+s3
+ > *
+s4
+)
+
+44 else if (*
+s3
+ < *
+s4
+)
+
+46 ++
+s3
+;
+
+47 ++
+s4
+;
+
+50 
+	}
+}
+
+53 
+	$strcmp
+(const char *
+s1
+, const char *
+s2
+) {
+
+54 while (*
+s1
+ && *
+s2
+) {
+
+55 int 
+r
+ = *
+s1
+++ - *
+s2
+++;
+
+56 if (
+r
+)
+
+57 return 
+r
+;
+
+59 return (*
+s1
+)?1:-1;
+
+60 
+	}
+}
+
+63 
+	$strcpy
+(char *
+dest
+, const char *
+src
+) {
+
+64 char *
+p
+ = 
+dest
+;
+
+65 while ( (*
+dest
+++ = *
+src
+++))
+
+67 *
+dest
+ = 0;
+
+68 return 
+p
+;
+
+69 
+	}
+}
+
+72 
+	$strlen
+(const char *
+s
+) {
+
+73 unsigned int 
+n
+ = 0;
+
+74 while (*
+s
+++)
+
+75 ++
+n
+;
+
+76 return 
+n
+;
+
+77 
+	}
+}
+
+	@kernel/print.c
+
+1 #include 
+	~"asm/io.h
+"
+
+2 #include 
+	~"kernel/printk.h
+"
+
+3 #include 
+	~"descriptors.h
+"
+
+5 static void 
+	$pic_install
+(void)
+
+7 
+	`outb
+(0x11, 0x20);
+
+8 
+	`outb
+(0x11, 0xa0);
+
+9 
+	`outb
+(0x20, 0x21);
+
+10 
+	`outb
+(0x28, 0xa1);
+
+11 
+	`outb
+(0x04, 0x21);
+
+12 
+	`outb
+(0x02, 0xa1);
+
+13 
+	`outb
+(0x01, 0x21);
+
+14 
+	`outb
+(0x01, 0xa1);
+
+15 
+	`outb
+(0xff, 0x21);
+
+16 
+	`outb
+(0xff, 0xa1);
+
+17 
+	}
+}
+
+19 void 
+	$pause
+(void)
+
+21 
+	`asm
+("nop");
+
+22 
+	}
+}
+
+24 void 
+	$main
+(void)
+
+26 unsigned int *
+screen
+ = (unsigned int*)(0xB8000 + 24*80 + 15);
+
+27 int 
+result
+ = 0;
+
+29 
+result
+ = 2 + 3;
+
+31 *
+screen
+ = 
+result
+ + 48;
+
+33 
+	`pic_install
+();
+
+35 
+	`printk
+(
+KPL_PANIC
+, "Hello world!\n");
+
+36 
+	`printk
+(
+KPL_DUMP
+, "gdt address %x\n", &
+gdt
+[1]);
+
+39 
+	`pause
+();
+
+42 
+	}
+}
+
+	@kernel/printk.c
+
+1 #include 
+	~"kernel/printk.h
+"
+
+3 #define 
+	#args_list
+ char *
+
+	)
+
+5 #define 
+	#_arg_stack_size
+(
+type
+) \
+
+6 (((sizeof(
+type
+)-1)/sizeof(int)+1)*sizeof(int))
+
+	)
+
+8 #define 
+	#args_start
+(
+ap
+, 
+fmt
+) do { \
+
+9 
+ap
+ = (char *)((unsigned int)&
+fmt
+ + 
+	`_arg_stack_size
+(&fmt)); \
+
+10 } while (0)
+
+	)
+
+12 #define 
+	#args_end
+(
+ap
+)
+
+	)
+
+14 #define 
+	#args_next
+(
+ap
+, 
+type
+) (((type *)(ap += 
+	`_arg_stack_size
+(type)))[-1])
+
+	)
+
+16 static char 
+	gbuf
+[1024] = { -1 };
+
+17 static int 
+	gptr
+ = -1;
+
+19 static void 
+	$parse_num
+(unsigned int 
+value
+, unsigned int 
+base
+)
+
+21 unsigned int 
+n
+ = 
+value
+ / 
+base
+;
+
+22 int 
+r
+ = 
+value
+ % 
+base
+;
+
+23 if (
+r
+ < 0)
+
+25 
+r
+ += 
+base
+;
+
+26 --
+n
+;
+
+28 if (
+value
+ >= 
+base
+)
+
+29 
+	`parse_num
+(
+n
+, 
+base
+);
+
+30 
+buf
+[
+ptr
+++] = "0123456789"[
+r
+];
+
+31 
+	}
+}
+
+33 static void 
+	$parse_hex
+(unsigned int 
+value
+)
+
+35 int 
+i
+ = 8;
+
+36 while (
+i
+-- > 0)
+
+38 
+buf
+[
+ptr
+++] = "0123456789abcdef"[(
+value
+>>(
+i
+*4)) & 0xf];
+
+40 
+	}
+}
+
+42 void 
+	$printk
+(enum 
+KP_LEVEL
+ 
+lvl
+, const char *
+fmt
+, ...)
+
+44 int 
+i
+ = 0;
+
+45 char *
+s
+;
+
+47 struct 
+	sKPC_STRUCT
+
+
+49 
+COLOUR
+ 
+fg
+;
+
+50 
+COLOUR
+ 
+bg
+;
+
+51 } 
+KPL
+[] = {
+
+52 {
+BRIGHT_WHITE
+, 
+BLACK
+ },
+
+53 {
+YELLOW
+, 
+RED
+},
+
+56 
+args_list
+ 
+args
+;
+
+57 
+	`args_start
+(
+args
+, 
+fmt
+);
+
+59 
+ptr
+ = 0;
+
+61 for (; 
+fmt
+[
+i
+]; i++)
+
+63 if ((
+fmt
+[
+i
+] != '%') && (fmt[i] != '\\'))
+
+65 
+buf
+[
+ptr
+++] = 
+fmt
+[
+i
+];
+
+67 } else if (
+fmt
+[
+i
+] == '\\')
+
+69 switch(
+fmt
+[++
+i
+])
+
+71 case 'a' : 
+buf
+[
+ptr
+++] = '\a'; break;
+
+72 case 'b' : 
+buf
+[
+ptr
+++] = '\b'; break;
+
+73 case 't' : 
+buf
+[
+ptr
+++] = '\t'; break;
+
+74 case 'n' : 
+buf
+[
+ptr
+++] = '\n'; break;
+
+75 case 'r' : 
+buf
+[
+ptr
+++] = '\r'; break;
+
+80 switch (
+fmt
+[++
+i
+])
+
+83 
+s
+ = (char *)
+	`args_next
+(
+args
+, char *);
+
+84 while (*
+s
+)
+
+85 
+buf
+[
+ptr
+++] = *
+s
+++;
+
+88 
+buf
+[
+ptr
+++] = (char)
+	`args_next
+(
+args
+, int);
+
+91 
+	`parse_hex
+((unsigned long)
+	`args_next
+(
+args
+, unsigned long));
+
+94 
+	`parse_num
+((unsigned long)
+	`args_next
+(
+args
+, unsigned long), 10);
+
+97 
+buf
+[
+ptr
+++] = '%';
+
+100 
+buf
+[
+ptr
+++] = 
+fmt
+[
+i
+];
+
+105 
+buf
+[
+ptr
+] = '\0';
+
+106 
+	`args_end
+(
+args
+);
+
+107 for (
+i
+ = 0; i < 
+ptr
+; ++i)
+
+108 
+	`print_c
+(
+buf
+[
+i
+], 
+KPL
+[
+lvl
+].
+fg
+, KPL[lvl].
+bg
+);
+
+109 
+	}
+}
+
+	@kernel/scr.c
+
+1 #include 
+	~"asm/io.h
+"
+
+2 #include 
+	~"kernel/scr.h
+"
+
+3 #include 
+	~"kernel/libcc.h
+"
+
+5 static int 
+	gcsr_x
+ = 0;
+
+6 static int 
+	gcsr_y
+ = 0;
+
+9 
+	$scroll
+(int 
+lines
+) {
+
+10 int 
+x
+ = 
+MAX_COLUMNS
+-1, 
+y
+ = 
+MAX_LINES
+*(
+lines
+-1)+MAX_LINES-1;
+
+11 short *
+p
+ = (short *)(
+VIDEO_RAM
++
+	`CHAR_OFF
+(
+x
+, 
+y
+));
+
+12 int 
+i
+ = 
+MAX_COLUMNS
+*(
+lines
+-1) + MAX_COLUMNS;
+
+13 
+	`memcpy
+((void *)
+VIDEO_RAM
+, (void *)(VIDEO_RAM+
+LINE_RAM
+*
+lines
+),
+
+14 
+LINE_RAM
+*(
+MAX_LINES
+-
+lines
+));
+
+15 for (; 
+i
+>0; --i)
+
+16 *
+p
+-- = (short)((
+BLANK_ATTR
+<<8)|
+BLANK_CHAR
+);
+
+17 
+	}
+}
+
+20 
+	$set_cursor
+(int 
+x
+, int 
+y
+) {
+
+21 
+csr_x
+ = 
+x
+;
+
+22 
+csr_y
+ = 
+y
+;
+
+23 
+	`outb
+(0x0e, 0x3d4);
+
+24 
+	`outb
+(((
+csr_x
++
+csr_y
+*
+MAX_COLUMNS
+)>>8)&0xff, 0x3d5);
+
+25 
+	`outb
+(0x0f, 0x3d4);
+
+26 
+	`outb
+(((
+csr_x
++
+csr_y
+*
+MAX_COLUMNS
+))&0xff, 0x3d5);
+
+27 
+	}
+}
+
+30 
+	$print_c
+(char 
+c
+, 
+COLOUR
+ 
+fg
+, COLOUR 
+bg
+) {
+
+31 char *
+p
+;
+
+32 char 
+attr
+;
+
+33 
+p
+ = (char *)
+VIDEO_RAM
++
+	`CHAR_OFF
+(
+csr_x
+, 
+csr_y
+);
+
+34 
+attr
+ = (char)(
+bg
+<<4|
+fg
+);
+
+35 switch (
+c
+) {
+
+37 
+csr_x
+ = 0;
+
+40 for (; 
+csr_x
+<
+MAX_COLUMNS
+; ++csr_x) {
+
+41 *
+p
+++ = 
+BLANK_CHAR
+;
+
+42 *
+p
+++ = 
+attr
+;
+
+46 
+c
+ = 
+csr_x
++
+TAB_WIDTH
+-(csr_x&(TAB_WIDTH-1));
+
+47 
+c
+ = c<
+MAX_COLUMNS
+?c:MAX_COLUMNS;
+
+48 for (; 
+csr_x
+<
+c
+; ++csr_x) {
+
+49 *
+p
+++ = 
+BLANK_CHAR
+;
+
+50 *
+p
+++ = 
+attr
+;
+
+54 if ((! 
+csr_x
+) && (! 
+csr_y
+))
+
+56 if (! 
+csr_x
+) {
+
+57 
+csr_x
+ = 
+MAX_COLUMNS
+ - 1;
+
+58 --
+csr_y
+;
+
+60 --
+csr_x
+;
+
+61 ((short *)
+p
+)[-1] = (short)((
+BLANK_ATTR
+<<8)|
+BLANK_CHAR
+);
+
+64 *
+p
+++ = 
+c
+;
+
+65 *
+p
+++ = 
+attr
+;
+
+66 ++
+csr_x
+;
+
+69 if (
+csr_x
+ >= 
+MAX_COLUMNS
+) {
+
+70 
+csr_x
+ = 0;
+
+71 if (
+csr_y
+ < 
+MAX_LINES
+-1)
+
+72 ++
+csr_y
+;
+
+74 
+	`scroll
+(1);
+
+76 
+	`set_cursor
+(
+csr_x
+, 
+csr_y
+);
+
+77 
+	}
+}
+
+	@kernel/traps.c
+
+1 #include 
+	~<asm.h
+>
+
+2 #include 
+	~<kprintf.h
+>
+
+3 #include 
+	~<scr.h
+>
+
+6 
+	$divide_error
+(void) {
+
+7 
+	`asm
+ ("pushl %%eax;call info"::"a"(
+KPL_PANIC
+));
+
+8 
+	`halt
+();
+
+9 
+	}
+}
+
+12 
+	$debug_exception
+(void) {
+
+13 
+	`asm
+ ("pushl %%eax;call info"::"a"(
+KPL_PANIC
+));
+
+14 
+	`halt
+();
+
+15 
+	}
+}
+
+18 
+	$breakpoint
+(void) {
+
+19 
+	`asm
+ ("pushl %%eax;call info"::"a"(
+KPL_PANIC
+));
+
+20 
+	`halt
+();
+
+21 
+	}
+}
+
+24 
+	$nmi
+(void) {
+
+25 
+	`asm
+ ("pushl %%eax;call info"::"a"(
+KPL_PANIC
+));
+
+26 
+	`halt
+();
+
+27 
+	}
+}
+
+30 
+	$overflow
+(void) {
+
+31 
+	`asm
+ ("pushl %%eax;call info"::"a"(
+KPL_PANIC
+));
+
+32 
+	`halt
+();
+
+33 
+	}
+}
+
+36 
+	$bounds_check
+(void) {
+
+37 
+	`asm
+ ("pushl %%eax;call info"::"a"(
+KPL_PANIC
+));
+
+38 
+	`halt
+();
+
+39 
+	}
+}
+
+42 
+	$invalid_opcode
+(void) {
+
+43 
+	`asm
+ ("pushl %%eax;call info"::"a"(
+KPL_PANIC
+));
+
+44 
+	`halt
+();
+
+45 
+	}
+}
+
+48 
+	$cop_not_avalid
+(void) {
+
+49 
+	`asm
+ ("pushl %%eax;call info"::"a"(
+KPL_PANIC
+));
+
+50 
+	`halt
+();
+
+51 
+	}
+}
+
+54 
+	$double_fault
+(void) {
+
+55 
+	`asm
+ ("pushl %%eax;call info"::"a"(
+KPL_PANIC
+));
+
+56 
+	`halt
+();
+
+57 
+	}
+}
+
+60 
+	$overrun
+(void) {
+
+61 
+	`asm
+ ("pushl %%eax;call info"::"a"(
+KPL_PANIC
+));
+
+62 
+	`halt
+();
+
+63 
+	}
+}
+
+66 
+	$invalid_tss
+(void) {
+
+67 
+	`asm
+ ("pushl %%eax;call info"::"a"(
+KPL_PANIC
+));
+
+68 
+	`halt
+();
+
+69 
+	}
+}
+
+72 
+	$seg_not_present
+(void) {
+
+73 
+	`asm
+ ("pushl %%eax;call info"::"a"(
+KPL_PANIC
+));
+
+74 
+	`halt
+();
+
+75 
+	}
+}
+
+78 
+	$stack_exception
+(void) {
+
+79 
+	`asm
+ ("pushl %%eax;call info"::"a"(
+KPL_PANIC
+));
+
+80 
+	`halt
+();
+
+81 
+	}
+}
+
+84 
+	$general_protection
+(void) {
+
+85 
+	`asm
+ ("pushl %%eax;call info"::"a"(
+KPL_PANIC
+));
+
+86 
+	`halt
+();
+
+87 
+	}
+}
+
+90 
+	$page_fault
+(void) {
+
+91 
+	`asm
+ ("pushl %%eax;call info"::"a"(
+KPL_PANIC
+));
+
+92 
+	`halt
+();
+
+93 
+	}
+}
+
+96 
+	$reversed
+(void) {
+
+97 
+	`asm
+ ("pushl %%eax;call info"::"a"(
+KPL_PANIC
+));
+
+98 
+	`halt
+();
+
+99 
+	}
+}
+
+102 
+	$coprocessor_error
+(void) {
+
+103 
+	`asm
+ ("pushl %%eax;call info"::"a"(
+KPL_PANIC
+));
+
+104 
+	`halt
+();
+
+105 
+	}
+}
+
+	@
+1
+.
+0
+18
+302
+boot/boot.s
+boot/setup.s
+include/asm/io.h
+include/console.h
+include/descriptors.h
+include/kernel/libcc.h
+include/kernel/printk.h
+include/kernel/scr.h
+include/kprint.h
+include/types.h
+init/main.c
+kernel/console.c
+kernel/kprint.c
+kernel/libcc.c
+kernel/print.c
+kernel/printk.c
+kernel/scr.c
+kernel/traps.c
