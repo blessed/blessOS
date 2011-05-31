@@ -35,7 +35,10 @@ INITSEG	./boot/boot.s	/^INITSEG equ 0x9000$/;"	d
 KPL_DUMP	./include/kernel/printk.h	/^enum KP_LEVEL { KPL_DUMP, KPL_PANIC };$/;"	e	enum:KP_LEVEL
 KPL_PANIC	./include/kernel/printk.h	/^enum KP_LEVEL { KPL_DUMP, KPL_PANIC };$/;"	e	enum:KP_LEVEL
 KPRINT_H	./include/kprint.h	2;"	d
+KP_DUMP	./include/kprint.h	/^enum KP_LEVEL { KP_DUMP, KP_PANIC };$/;"	e	enum:KP_LEVEL
 KP_LEVEL	./include/kernel/printk.h	/^enum KP_LEVEL { KPL_DUMP, KPL_PANIC };$/;"	g
+KP_LEVEL	./include/kprint.h	/^enum KP_LEVEL { KP_DUMP, KP_PANIC };$/;"	g
+KP_PANIC	./include/kprint.h	/^enum KP_LEVEL { KP_DUMP, KP_PANIC };$/;"	e	enum:KP_LEVEL
 LDT_CODE	./include/descriptors.h	22;"	d
 LDT_DATA	./include/descriptors.h	23;"	d
 LDT_NULL	./include/descriptors.h	21;"	d
@@ -96,6 +99,7 @@ boom	./boot/setup.s	/^boom:$/;"	l
 bounds_check	./kernel/traps.c	/^bounds_check(void) {$/;"	f
 breakpoint	./kernel/traps.c	/^breakpoint(void) {$/;"	f
 buf	./kernel/printk.c	/^static char buf[1024] = { -1 };$/;"	v	file:
+buffer	./kernel/kprint.c	/^static unsigned char buffer[1024];$/;"	v	file:
 bzero	./include/kernel/libcc.h	/^void bzero(void *dest, unsigned int n);$/;"	p
 bzero	./kernel/libcc.c	/^bzero(void *dest, unsigned int n) {$/;"	f
 cop_not_avalid	./kernel/traps.c	/^cop_not_avalid(void) {$/;"	f
@@ -122,7 +126,7 @@ gdtr	./boot/boot.s	/^gdtr:$/;"	l
 general_protection	./kernel/traps.c	/^general_protection(void) {$/;"	f
 get_cursor	./include/console.h	/^void get_cursor(int *x, int *y);$/;"	p
 get_cursor	./include/kernel/scr.h	/^void get_cursor(int *, int *);$/;"	p
-get_cursor	./kernel/console.c	/^void get_cursor(int *x, int *y);$/;"	p	file:
+get_cursor	./kernel/console.c	/^void get_cursor(int *x, int *y)$/;"	f
 hang	./boot/boot.s	/^hang:$/;"	l
 head	./boot/boot.s	/^head dw 0$/;"	d
 idt	./boot/boot.s	/^idt:$/;"	l
@@ -154,7 +158,9 @@ outb_p	./include/asm/io.h	10;"	d
 overflow	./kernel/traps.c	/^overflow(void) {$/;"	f
 overrun	./kernel/traps.c	/^overrun(void) {$/;"	f
 page_fault	./kernel/traps.c	/^page_fault(void) {$/;"	f
+parse_hex	./kernel/kprint.c	/^static void parse_hex(unsigned long num)$/;"	f	file:
 parse_hex	./kernel/printk.c	/^static void parse_hex(unsigned int value)$/;"	f	file:
+parse_num	./kernel/kprint.c	/^static void parse_num(unsigned long num, unsigned int base)$/;"	f	file:
 parse_num	./kernel/printk.c	/^static void parse_num(unsigned int value, unsigned int base)$/;"	f	file:
 pause	./kernel/print.c	/^void pause(void)$/;"	f
 pg0	./boot/setup.s	/^pg0:$/;"	l
@@ -169,7 +175,9 @@ print_char	./include/console.h	/^void print_char(char c, COLOUR fg, COLOUR bkg);
 print_char	./kernel/console.c	/^void print_char(char c, COLOUR fg, COLOUR bkg)$/;"	f
 printk	./include/kernel/printk.h	/^void printk(enum KP_LEVEL lvl, const char *fmt, ...);$/;"	p
 printk	./include/kprint.h	/^void printk(enum KP_LEVEL log_lvl, const char *fmt, ...);$/;"	p
+printk	./kernel/kprint.c	/^void printk(enum KP_LEVEL log_lvl, const char *fmt, ...)$/;"	f
 printk	./kernel/printk.c	/^void printk(enum KP_LEVEL lvl, const char *fmt, ...)$/;"	f
+ptr	./kernel/kprint.c	/^static int ptr = 0;$/;"	v	file:
 ptr	./kernel/printk.c	/^static int ptr = -1;$/;"	v	file:
 push	./boot/boot.s	/^	push dx$/;"	d
 putstr	./boot/boot.s	/^putstr:$/;"	l
@@ -204,7 +212,8 @@ track	./boot/boot.s	/^track dw 0$/;"	d
 uint16_t	./include/types.h	/^typedef unsigned short uint16_t;$/;"	t
 uint32_t	./include/types.h	/^typedef unsigned int uint32_t;$/;"	t
 uint8_t	./include/types.h	/^typedef unsigned char uint8_t;$/;"	t
-va_end	./kernel/kprint.c	12;"	d	file:
-va_next	./kernel/kprint.c	9;"	d	file:
-va_rounded_size	./kernel/kprint.c	3;"	d	file:
-va_start	./kernel/kprint.c	6;"	d	file:
+va_end	./kernel/kprint.c	14;"	d	file:
+va_list	./kernel/kprint.c	/^typedef char * va_list;$/;"	t	file:
+va_next	./kernel/kprint.c	11;"	d	file:
+va_rounded_size	./kernel/kprint.c	5;"	d	file:
+va_start	./kernel/kprint.c	8;"	d	file:

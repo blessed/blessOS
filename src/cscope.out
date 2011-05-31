@@ -1,4 +1,4 @@
-cscope 15 $HOME/Programowanie/blessOS/original/src -c -q 0000000435 0000024609
+cscope 15 $HOME/Programowanie/blessOS/original/src -c -q 0000000439 0000026346
 	@boot/boot.s
 
 1 [
@@ -3172,11 +3172,11 @@ KPRINT_H
 >
 
 6 enum 
-	gKP_LEVEL
- = { 
-KP_DUMP
+	eKP_LEVEL
+ { 
+	mKP_DUMP
 , 
-KP_PANIC
+	mKP_PANIC
  };
 
 8 void 
@@ -3258,22 +3258,26 @@ count
 	@kernel/console.c
 
 1 #include 
-	~<asm.h
+	~<asm/io.h
 >
 
 2 #include 
+	~<kernel/libcc.h
+>
+
+3 #include 
 	~<console.h
 >
 
-4 static int 
+5 static int 
 	gcur_x
  = 0;
 
-5 static int 
+6 static int 
 	gcur_y
  = 0;
 
-7 void 
+8 void 
 	$set_cursor
 (int 
 x
@@ -3281,23 +3285,23 @@ x
 y
 )
 
-9 
+10 
 cur_x
  = 
 x
 ;
 
-10 
+11 
 cur_y
  = 
 y
 ;
 
-11 
+12 
 	`outb
 (0x0e, 0x3d4);
 
-12 
+13 
 	`outb
 ((((
 cur_x
@@ -3307,11 +3311,11 @@ cur_y
 MAX_COLUMNS
 ) >> 8) && 0xff), 0x3d5);
 
-13 
+14 
 	`outb
 (0x0f, 0x3d4);
 
-14 
+15 
 	`outb
 ((((
 cur_x
@@ -3321,61 +3325,53 @@ cur_y
 MAX_COLUMNS
 )) && 0xff), 0x3d5);
 
-15 
+16 
 	}
 }
 
-17 void 
-get_cursor
+18 void 
+	$get_cursor
 (int *
 x
 , int *
 y
-);
+)
 
-19 *
-	gx
+20 *
+x
  = 
 cur_x
 ;
 
-20 *
-	gy
+21 *
+y
  = 
 cur_y
 ;
 
-23 static void 
+22 
+	}
+}
+
+24 static void 
 	$scroll_down
 (unsigned int 
 lines
 )
 
-26 
-	`memcpy
-((void *)(
-VRAM
-), (void *)(VRAM + 
-LINE_RAM
- * 
-lines
-), LINE_RAM * (
-MAX_LINES
- - lines));
-
-27 unsigned short *
+26 unsigned short *
 p
- = (unsigned char *)(
+ = (unsigned short *)(
 VRAM
  + 
-LINE_RAM
+VRAM_LINE
  * (
 MAX_LINES
  - 
 lines
 ));
 
-28 int 
+27 int 
 i
  = 
 MAX_COLUMNS
@@ -3383,19 +3379,31 @@ MAX_COLUMNS
 lines
  - 1;
 
-29 for (; 
+29 
+	`memcpy
+((void *)(
+VRAM
+), (void *)(VRAM + 
+VRAM_LINE
+ * 
+lines
+), VRAM_LINE * (
+MAX_LINES
+ - lines));
+
+30 for (; 
 i
  > 0; --i)
 
-31 *
+32 *
 p
 ++ = 0x0720;
 
-33 
+34 
 	}
 }
 
-35 void 
+36 void 
 	$print_char
 (char 
 c
@@ -3407,7 +3415,7 @@ fg
 bkg
 )
 
-37 unsigned char *
+38 unsigned char *
 p
  = (unsigned char *)(
 VRAM
@@ -3419,7 +3427,7 @@ cur_x
 cur_y
 ));
 
-38 unsigned char 
+39 unsigned char 
 attribute
  = ((
 fg
@@ -3427,31 +3435,31 @@ fg
 bkg
 );
 
-40 switch (
+41 switch (
 c
 )
 
-43 
+44 
 cur_x
  = 0;
 
-46 for (; 
+47 for (; 
 cur_x
  < 
 MAX_COLUMNS
 ; ++cur_x)
 
-48 *
+49 *
 p
 ++ = 0x20;
 
-49 *
+50 *
 p
 ++ = 
 attribute
 ;
 
-53 
+54 
 c
  = 
 cur_x
@@ -3459,97 +3467,97 @@ cur_x
 TAB_WIDTH
  - (cur_x & (TAB_WIDTH - 1));
 
-54 
+55 
 c
  = c < 
 MAX_COLUMNS
  ? c : MAX_COLUMNS;
 
-55 for (; 
+56 for (; 
 cur_x
  < 
 c
 ; ++cur_x)
 
-57 *
+58 *
 p
 ++ = 0x20;
 
-58 *
+59 *
 p
 ++ = 
 attribute
 ;
 
-62 if (!
+63 if (!
 cur_x
  && !
 cur_y
 )
 
-64 if (!
+65 if (!
 cur_x
 )
 
-66 
+67 
 cur_x
  = 
 MAX_COLUMNS
  - 1;
 
-67 
+68 
 cur_y
 --;
 
-69 
+70 
 cur_x
 --;
 
-70 ((short *)
+71 ((short *)
 p
 )[-1] = 0x0720;
 
-74 *
+75 *
 p
 ++ = 
 c
 ;
 
-75 *
+76 *
 p
 ++ = 
 attribute
 ;
 
-76 
+77 
 cur_x
-;
+++;
 
-80 if (
+81 if (
 cur_x
  >= 
 MAX_COLUMNS
 )
 
-82 
+83 
 cur_x
  = 0;
 
-83 if (
+84 if (
 cur_y
  < 
 MAX_LINES
 -1)
 
-84 
+85 
 cur_y
 ++;
 
-86 
+87 
 	`scroll_down
 (1);
 
-88 
+89 
 	`set_cursor
 (
 cur_x
@@ -3557,7 +3565,7 @@ cur_x
 cur_y
 );
 
-89 
+90 
 	}
 }
 
@@ -3567,19 +3575,23 @@ cur_y
 	~<kprint.h
 >
 
-3 #define 
+3 typedef char * 
+	tva_list
+;
+
+5 #define 
 	#va_rounded_size
 (
 type
 ) \
 
-4 (((sizeof(
+6 (((sizeof(
 type
 ) + sizeof(int) - 1) / sizeof(int)) * sizeof(int))
 
 	)
 
-6 #define 
+8 #define 
 	#va_start
 (
 ap
@@ -3587,7 +3599,7 @@ ap
 last_arg
 ) \
 
-7 (
+9 (
 ap
  = (char *)&
 last_arg
@@ -3597,7 +3609,7 @@ last_arg
 
 	)
 
-9 #define 
+11 #define 
 	#va_next
 (
 ap
@@ -3605,7 +3617,7 @@ ap
 type
 ) \
 
-10 (((
+12 (((
 type
  *)(
 ap
@@ -3615,21 +3627,339 @@ ap
 
 	)
 
-12 #define 
+14 #define 
 	#va_end
 (
-ap
-) \
-
-13 (
 ap
 )
 
 	)
 
-15 void 
-printk
-(enum
+16 static unsigned char 
+	gbuffer
+[1024];
+
+17 static int 
+	gptr
+ = 0;
+
+19 static void 
+	$parse_hex
+(unsigned long 
+num
+)
+
+21 int 
+i
+ = 8;
+
+22 while (
+i
+-- > 0)
+
+23 
+buffer
+[
+ptr
+++] = "0123456789abcdef"[(
+num
+ >> (
+i
+ * 4)) & 0xf];
+
+24 
+	}
+}
+
+26 static void 
+	$parse_num
+(unsigned long 
+num
+, unsigned int 
+base
+)
+
+28 int 
+n
+ = 
+num
+ / 
+base
+;
+
+29 int 
+r
+ = 
+num
+ % 
+base
+;
+
+31 if (
+num
+ >= 
+base
+)
+
+32 
+	`parse_num
+(
+n
+, 
+base
+);
+
+33 
+buffer
+[
+ptr
+++] = "0123456789"[
+r
+];
+
+34 
+	}
+}
+
+36 void 
+	$printk
+(enum 
+KP_LEVEL
+ 
+log_lvl
+, const char *
+fmt
+, ...)
+
+38 int 
+i
+ = 0;
+
+39 char *
+s
+;
+
+41 struct 
+	sKPC_STRUCT
+
+
+43 
+COLOUR
+ 
+fg
+;
+
+44 
+COLOUR
+ 
+bkg
+;
+
+45 } 
+kpc
+[] =
+
+47 { 
+WHITE
+, 
+BLACK
+ },
+
+48 { 
+YELLOW
+, 
+RED
+ }
+
+51 
+va_list
+ 
+args
+;
+
+52 
+	`va_start
+(
+args
+, 
+fmt
+);
+
+54 for (; 
+fmt
+[
+i
+]; ++i)
+
+56 if ((
+fmt
+[
+i
+] != '%') && (fmt[i] != '\\'))
+
+58 
+buffer
+[
+ptr
+++] = 
+fmt
+[
+i
+];
+
+60 } else if (
+fmt
+[
+i
+] == '\\')
+
+62 switch (
+fmt
+[++
+i
+])
+
+65 
+buffer
+[
+ptr
+++] = '\a';
+
+68 
+buffer
+[
+ptr
+++] = '\b';
+
+71 
+buffer
+[
+ptr
+++] = '\r';
+
+74 
+buffer
+[
+ptr
+++] = '\t';
+
+77 
+buffer
+[
+ptr
+++] = '\n';
+
+80 
+buffer
+[
+ptr
+++] = '\\';
+
+86 switch (
+fmt
+[++
+i
+])
+
+89 
+s
+ = (char *)
+	`va_next
+(
+args
+, char *);
+
+90 while (*
+s
+)
+
+91 
+buffer
+[
+ptr
+++] = *
+s
+++;
+
+94 
+buffer
+[
+ptr
+++] = (char)
+	`va_next
+(
+args
+, char);
+
+97 
+	`parse_hex
+((unsigned long)
+	`va_next
+(
+args
+, unsigned long));
+
+100 
+	`parse_num
+((unsigned long)
+	`va_next
+(
+args
+, unsigned long), 10);
+
+103 
+buffer
+[
+ptr
+++] = '%';
+
+106 
+buffer
+[
+ptr
+++] = 
+fmt
+[
+i
+];
+
+111 
+buffer
+[
+ptr
+] = '\0';
+
+112 
+	`va_end
+(
+args
+);
+
+113 for (
+i
+ = 0; i < 
+ptr
+; ++i)
+
+115 
+	`print_char
+(
+buffer
+[
+i
+], 
+kpc
+[
+log_lvl
+].
+fg
+, kpc[log_lvl].
+bkg
+);
+
+117 
+	}
+}
 
 	@kernel/libcc.c
 
@@ -3926,7 +4256,7 @@ n
 "
 
 2 #include 
-	~"kernel/printk.h
+	~"kprint.h
 "
 
 3 #include 
@@ -4022,13 +4352,13 @@ result
 35 
 	`printk
 (
-KPL_PANIC
+KP_PANIC
 , "Hello world!\n");
 
 36 
 	`printk
 (
-KPL_DUMP
+KP_DUMP
 , "gdt address %x\n", &
 gdt
 [1]);

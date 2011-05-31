@@ -13,8 +13,8 @@ typedef char * va_list;
 
 #define va_end(ap)
 
-static unsigned char buffer[1024];
-static int ptr = 0;
+static unsigned char buffer[1024] = { 1 };
+static int ptr = -1;
 
 static void parse_hex(unsigned long num)
 {
@@ -50,6 +50,8 @@ void printk(enum KP_LEVEL log_lvl, const char *fmt, ...)
 
 	va_list args;
 	va_start(args, fmt);
+
+	ptr = 0;
 
 	for (; fmt[i]; ++i)
 	{
@@ -91,7 +93,7 @@ void printk(enum KP_LEVEL log_lvl, const char *fmt, ...)
 					buffer[ptr++] = *s++;
 				break;
 			case 'c':
-				buffer[ptr++] = (char)va_next(args, char);
+				buffer[ptr++] = (char)va_next(args, int);
 				break;
 			case 'x':
 				parse_hex((unsigned long)va_next(args, unsigned long));

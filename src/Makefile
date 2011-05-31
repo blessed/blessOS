@@ -23,7 +23,7 @@ main: boot/setup.o kernel/print.o kernel/kprint.o kernel/console.o kernel/libcc.
 	$(LD) $(LDFLAGS) $^ -o $@
 
 all: main
-	dd of=boot/floppy.img if=$< bs=1 seek=512
+	dd of=floppy.img if=$< bs=1 seek=512
 
 clean:
 	rm -f $(KERNEL_SRC)/kernel/*.o
