@@ -19,7 +19,7 @@ setup: boot/setup.o
 	$(LD) $(LDFLAGS) $< -o $@
 
 # kernel binary
-main: boot/setup.o kernel/print.o kernel/kprint.o kernel/console.o kernel/libcc.o
+main: boot/setup.o kernel/print.o
 	$(LD) $(LDFLAGS) $^ -o $@
 
 all: main

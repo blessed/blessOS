@@ -1,6 +1,4 @@
 #include "asm/io.h"
-#include "kprint.h"
-#include "descriptors.h"
 
 static void pic_install(void)
 {
@@ -31,9 +29,6 @@ void main(void)
 	*screen = result + 48;
 
 	pic_install();
-
-	printk(KP_PANIC, "Hello world!\n");
-	printk(KP_DUMP, "gdt address %x\n", &gdt[1]);
 
 	for(;;)
 		pause();
