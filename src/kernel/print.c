@@ -1,4 +1,8 @@
-#include "asm/io.h"
+#include <asm/io.h>
+#include <kernel/system.h>
+#include <kernel/printk.h>
+#include <kernel/timer.h>
+#include <kernel/isr.h>
 
 static void pic_install(void)
 {
@@ -21,17 +25,25 @@ void pause(void)
 
 void main(void)
 {
-	unsigned int *screen = (unsigned int*)(0xB8000 + 24*80 + 15);
-	int result = 0;
-
-	result = 2 + 3;
-
-	*screen = result + 48;
+	char wheel[] = { '\\', '|', '/', '-' };
+	int i;
 
 	pic_install();
+	traps_init();
+	timer_install(100);
+
+	sti();
+
+	printk(KPL_PANIC, "UWAGA!\n");
+	printk(KPL_DUMP, "Zartowalem\n");
 
 	for(;;)
-		pause();
+	{
+		if (i == sizeof (wheel))
+			i = 0;
+
+		asm("movb %%al, 0xb8000 + 160*24"::"a"(wheel[i++]));
+	}
 
 	return;
 }
