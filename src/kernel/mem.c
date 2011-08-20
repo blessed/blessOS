@@ -2,8 +2,8 @@
 
 void memcpy(const void *src, void *dst, unsigned int n)
 {
-	const char *s = src;
-	char *d = dst;
+	const char *s = (const char *)src;
+	char *d = (char *)dst;
 	/* check if dst overlaps src */
 	if (s <= d)
 		for (; n > 0; --n)

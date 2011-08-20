@@ -140,7 +140,6 @@ void traps_init(void)
 
 	for (i = 0; i < VALID_ISR; ++i)
 		set_intr_gate(i, (unsigned int)isr_table[(i << 1) + 1]);
-	printk(KPL_DUMP, "Setting up interrupt %d\n", i);
 	for (; i < 256; ++i)
 		set_intr_gate(i, (unsigned int)isr_table[(i << 1) + 1]);
 }

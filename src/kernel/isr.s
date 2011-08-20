@@ -34,7 +34,7 @@ isr_table:	.long divide_error, isr0x00, debug, isr0x01
 			.long reserved, isr0x1a, reserved, isr0x1b
 			.long reserved, isr0x1c, reserved, isr0x1d
 			.long reserved, isr0x1e, reserved, isr0x1f
-			.long do_timer, isr0x20
+			.long do_timer, isr0x20, do_kb, isr0x21
 
 /*
 		+-----------+
@@ -136,3 +136,4 @@ isrnoerror	0x1d
 isrnoerror	0x1e
 isrnoerror	0x1f
 isrnoerror	0x20
+isrnoerror	0x21

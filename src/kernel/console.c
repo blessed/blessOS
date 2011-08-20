@@ -2,36 +2,39 @@
 #include <asm/io.h>
 #include <kernel/mem.h>
 
-/* cursor positions */
-static int csr_x = 0;
-static int csr_y = 0;
+/* cursor position */
+static int csr_x, csr_y;
 
-static void scroll_down(int lines)
+/* something is fucked up with the scroll_down procedure.
+ * gotta look into this in detail
+ */
+
+static void scroll_down()
 {
 	int i;
-	char *p;
-	short *src = (short *)(VIDEORAM_START + VRAM_LINE * lines);
-	short *dst = (short *)(VIDEORAM_START);
-	memcpy((void *)src, (void *)dst, (unsigned int)(VRAM_LINE * (LINES - lines)));
+	unsigned short *vga_mem = (unsigned short *)VIDEORAM_START;
 
-	i = (LINES - lines) * COLUMNS * 2;
-	p = (char *)(VIDEORAM_START + VRAM_LINE * (LINES - lines));
-	for (; i > 0; --i)
+	for (i = 0; i < COLUMNS * (LINES-1); ++i)
+		vga_mem[i] = vga_mem[i + COLUMNS];
+
+	for (i = 0; i < COLUMNS; ++i)
 	{
-		*p++ = EMPTY_CHAR;
-		*p++ = BLANK_ATTR;
+		vga_mem[COLUMNS * (LINES - 1) + i] = 3872;
 	}
 }
 
 void set_cursor(int x, int y)
 {
+	unsigned short position;
 	csr_x = x;
 	csr_y = y;
 
-	outb(0x0e, 0x3d4);
-	outb(((csr_x + csr_y * COLUMNS) >> 8) & 0xff, 0x3d5);
+	position = csr_y * COLUMNS + csr_x;
+
 	outb(0x0f, 0x3d4);
-	outb(((csr_x + csr_y * COLUMNS)) & 0xff, 0x3d5);
+	outb((unsigned char)(position & 0xff), 0x3d5);
+	outb(0x0e, 0x3d4);
+	outb((unsigned char)((position >> 8) & 0xff), 0x3d5);
 }
 
 void get_cursor(int *x, int *y)
@@ -42,20 +45,29 @@ void get_cursor(int *x, int *y)
 
 void print_c(char c, COLOUR fg, COLOUR bg)
 {
-	char *dst = (char *)(VIDEORAM_START + csr_x*2 + csr_y*VRAM_LINE);
-	char attr = (char)(bg << 4 | fg);
+	unsigned char *dest = (unsigned char *)(VIDEORAM_START + csr_y * VRAM_LINE + csr_x * 2);
+	unsigned char attr = (unsigned char)(bg << 4 | fg);
 
 	switch (c)
 	{
+		case '\r':
+			csr_x = 0;
+			break;
 		case '\n':
 			for (; csr_x < COLUMNS; ++csr_x)
 			{
-				*dst++ = EMPTY_CHAR;
-				*dst++ = attr;
+				*dest++ = (unsigned char)EMPTY_CHAR;
+				*dest++ = attr;
 			}
 			break;
-		case '\r':
-			csr_x = 0;
+		case '\t':
+			c = csr_x + TAB_WIDTH - (csr_x & (TAB_WIDTH - 1));
+			c = c < COLUMNS ? c : COLUMNS;
+			for (; csr_x < c; ++csr_x)
+			{
+				*dest++ = (unsigned char)EMPTY_CHAR;
+				*dest++ = attr;
+			}
 			break;
 		case '\b':
 			if ((!csr_x) && (!csr_y))
@@ -66,21 +78,12 @@ void print_c(char c, COLOUR fg, COLOUR bg)
 				--csr_y;
 			} else
 				--csr_x;
-			dst[-1] = BLANK_ATTR;
-			dst[-2] = EMPTY_CHAR;
-			break;
-		case '\t':
-			c = csr_x + TAB_WIDTH;
-			c = c < COLUMNS ? c : COLUMNS;
-			for (; csr_x < c; ++csr_x)
-			{
-				*dst++ = EMPTY_CHAR;
-				*dst++ = attr;
-			}
+			dest[-1] = (unsigned char)BLANK_ATTR;
+			dest[-2] = (unsigned char)EMPTY_CHAR;
 			break;
 		default:
-			*dst++ = c;
-			*dst++ = attr;
+			*dest++ = c;
+			*dest++ = attr;
 			++csr_x;
 			break;
 	}
@@ -89,9 +92,9 @@ void print_c(char c, COLOUR fg, COLOUR bg)
 	{
 		csr_x = 0;
 		if (csr_y < (LINES - 1))
-			csr_y++;
+			++csr_y;
 		else
-			scroll_down(1);
+			scroll_down();
 	}
 	set_cursor(csr_x, csr_y);
 }

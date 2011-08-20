@@ -3,6 +3,8 @@
 #include <kernel/printk.h>
 #include <kernel/timer.h>
 #include <kernel/isr.h>
+#include <kernel/keyboard.h>
+#include <kernel/exceptions.h>
 
 static void pic_install(void)
 {
@@ -31,11 +33,9 @@ void main(void)
 	pic_install();
 	traps_init();
 	timer_install(100);
+	kb_install();
 
 	sti();
-
-	printk(KPL_PANIC, "UWAGA!\n");
-	printk(KPL_DUMP, "Zartowalem\n");
 
 	for(;;)
 	{
@@ -44,6 +44,9 @@ void main(void)
 
 		asm("movb %%al, 0xb8000 + 160*24"::"a"(wheel[i++]));
 	}
+
+	for (;;)
+		pause();
 
 	return;
 }

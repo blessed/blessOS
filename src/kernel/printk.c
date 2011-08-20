@@ -1,17 +1,20 @@
 #include <kernel/console.h>
 #include <kernel/printk.h>
 
-#define va_list char * /* variable list of arguments */
+typedef char* va_list; /* variable list of arguments */
 
-#define va_rounded_size(TYPE) \
-	(((sizeof(TYPE) + sizeof(int) - 1) / sizeof(int)) * sizeof(int))
+#define va_rounded_size(TYPE)	\
+	(((sizeof (TYPE) + sizeof (int) - 1) / sizeof (int)) * sizeof (int))
 
-#define va_start(AP, LASTARG) \
-	(AP = ((char *)&(LASTARG) + va_rounded_size(LASTARG)))
+#define va_start(AP, LASTARG)	\
+	(AP = ((char *) &(LASTARG) + va_rounded_size(LASTARG)))
 
+#define va_next(AP, TYPE)	\
+	(AP += va_rounded_size (TYPE),	\
+	 *((TYPE *) (AP - va_rounded_size (TYPE))))
+
+void va_end(void);
 #define va_end(AP)
-
-#define va_next(AP, TYPE) (((TYPE *)(AP += va_rounded_size(TYPE)))[-1])
 
 static char buffer[1024];
 static int ptr = -1;
@@ -78,6 +81,8 @@ void printk(enum KP_LEVEL kl, const char *fmt, ...)
 					buffer[ptr++] = '\n'; break;
 				case 'r':
 					buffer[ptr++] = '\r'; break;
+				case '\\':
+					buffer[ptr++] = '\\'; break;
 			}
 
 			continue;
@@ -91,7 +96,7 @@ void printk(enum KP_LEVEL kl, const char *fmt, ...)
 					buffer[ptr++] = *s++;
 				break;
 			case 'c':
-				buffer[ptr++] = (char)va_next(args, char);
+				buffer[ptr++] = (char)va_next(args, int);
 				break;
 			case 'x':
 				parse_hex((unsigned long)va_next(args, unsigned long));

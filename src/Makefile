@@ -19,7 +19,7 @@ setup: boot/setup.o
 	@$(LD) $(LDFLAGS) $< -o $@
 
 # kernel binary
-main: boot/setup.o kernel/print.o kernel/printk.o kernel/console.o kernel/mem.o kernel/exceptions.o kernel/isr.o kernel/timer.o
+main: boot/setup.o init/main.o kernel/printk.o kernel/console.o kernel/mem.o kernel/exceptions.o kernel/isr.o kernel/keyboard.o kernel/timer.o
 	@$(LD) $(LDFLAGS) $^ -o $@ -M > main.map
 
 all: main
