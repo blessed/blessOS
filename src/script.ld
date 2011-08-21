@@ -20,5 +20,11 @@ SECTIONS
 		*(.bss)
 	}
 
+	.rodata :
+	{
+		rodata = .; _rodata = .; __rodata = .;
+		*(.rodata)
+	}
+
 	end = .; _end = .; __end = .;
 }
