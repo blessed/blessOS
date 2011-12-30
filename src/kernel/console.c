@@ -1,3 +1,4 @@
+#include <kernel/common.h>
 #include <kernel/console.h>
 #include <asm/io.h>
 #include <kernel/mem.h>
@@ -9,18 +10,30 @@ static int csr_x, csr_y;
  * gotta look into this in detail
  */
 
-static void scroll_down()
+static void scroll_down(void)
 {
 	int i;
+	unsigned short blank;
 	unsigned short *vga_mem = (unsigned short *)VIDEORAM_START;
 
-	for (i = 0; i < COLUMNS * (LINES-1); ++i)
-		vga_mem[i] = vga_mem[i + COLUMNS];
+	blank = 0x20 | (((0 << 4) | (15 & 0xff)) << 8);
+
+	memcpy(vga_mem + COLUMNS, vga_mem, COLUMNS * (LINES - 1) * 2);
 
 	for (i = 0; i < COLUMNS; ++i)
 	{
-		vga_mem[COLUMNS * (LINES - 1) + i] = 3872;
+		vga_mem[COLUMNS * (LINES - 1) + i] = blank;
 	}
+}
+
+void clear_screen(void)
+{
+	unsigned short blank;
+	unsigned short *vga_mem = (unsigned short *)VIDEORAM_START;
+
+	blank = 0x20 | (((0 << 4) | (15 & 0xff)) << 8);
+
+	memsetw(vga_mem, blank, LINES * COLUMNS);
 }
 
 void set_cursor(int x, int y)
@@ -97,4 +110,14 @@ void print_c(char c, COLOUR fg, COLOUR bg)
 			scroll_down();
 	}
 	set_cursor(csr_x, csr_y);
+}
+
+void console_init(void)
+{
+	int i;
+	clear_screen();
+	set_cursor(0, 0);
+
+	for (i = 0; i < 10; ++i)
+		scroll_down();
 }

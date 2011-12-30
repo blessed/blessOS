@@ -25,4 +25,6 @@ void print_c(char c, COLOUR fg, COLOUR bg);
 void set_cursor(int x, int y);
 void get_cursor(int *x, int *y);
 
+void console_init(void);
+
 #endif /* _CONSOLE_H_ */

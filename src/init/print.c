@@ -1,10 +1,13 @@
 #include <asm/io.h>
 #include <kernel/system.h>
+#include <kernel/console.h>
 #include <kernel/printk.h>
 #include <kernel/timer.h>
 #include <kernel/isr.h>
 #include <kernel/keyboard.h>
 #include <kernel/exceptions.h>
+#include <kernel/sched.h>
+#include <mm/paging.h>
 
 static void pic_install(void)
 {
@@ -32,34 +35,23 @@ void main(void)
 	int i;
 	int count = 0;
 
+	initialize_paging();
+	console_init();
 	pic_install();
 	traps_init();
 	timer_install(100);
 	kb_install();
+	sched_init();
 
 	sti();
 
-	/*
-	for (i = 0; i < 16000; ++i)
-	{
-		videoram[count++] = 'c';
-		videoram[count++] = 0x00;
-	}
-	*/
-
-	/*
 	for(;;)
 	{
 		if (i == sizeof (wheel))
 			i = 0;
 
 		asm("movb %%al, 0xb8000 + 160*24"::"a"(wheel[i++]));
-		asm("movb %%al, 0xb8000 + 160*24+1"::"a"(0x07));
 	}
-	*/
-
-	for (;;)
-		pause();
 
 	return;
 }

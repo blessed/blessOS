@@ -33,6 +33,8 @@ int main()
 	char hello[] = "Hello to my OS!";
 	unsigned char *videoram = (unsigned char *) 0xB8000; /* 0xB0000 for monochrome monitors */
 
+	unsigned int *task_reg = 0x200000;
+
 	pic_install();
 	traps_init();
 	timer_install(100);
@@ -44,6 +46,14 @@ int main()
 		videoram[count++] = 'c';
 		videoram[count++] = 0x00;  /* print black 'A' on black background */
 	}
+
+	asm volatile (
+			"str %0"
+			: "=m"(task_reg)
+			:
+			);
+
+	printk(KPL_DUMP, "task reg %x\n", *task_reg);
  
 	/* print string */
 	i = 0;
@@ -53,7 +63,7 @@ int main()
 		videoram[count++] = hello[i++];
 		videoram[count++] = 0x07; /* grey letters on black background */
 	}
- 
+
 	while(1); /* just spin */
  
 	return 0;

@@ -1,7 +1,7 @@
 .code32
 .text
 .globl startup_32, gdt, idt, pg_dir
-.extern main
+.extern main, stack_start
 .org 0
 
 # paging directory is going to start from 0x0 and is going to overwrite following code
@@ -22,7 +22,7 @@ startup_32:
 	movw %ax,%fs
 	movw %ax,%gs
 	movw %ax,%ss
-	movl $0xa0000,%esp
+	lss  stack_start, %esp
 
 	movl $msg,%esi
 	movl $0xb8000,%edi

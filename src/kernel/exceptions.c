@@ -138,7 +138,7 @@ void traps_init(void)
 {
 	int i;
 
-	for (i = 0; i < VALID_ISR; ++i)
+	for (i = 0; i < VALID_ISR+2; ++i)
 		set_intr_gate(i, (unsigned int)isr_table[(i << 1) + 1]);
 	for (; i < 256; ++i)
 		set_intr_gate(i, (unsigned int)isr_table[(i << 1) + 1]);

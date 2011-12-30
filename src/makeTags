@@ -2,4 +2,4 @@
 
 find . -name '*.c' -o -name '*.h' -o -name '*.s' > cscope.files
 ctags --extra=+q --c-kinds=+p -Lcscope.files
-cscope -k -q -c -icscope.files
+cscope -b -k -q -c -icscope.files

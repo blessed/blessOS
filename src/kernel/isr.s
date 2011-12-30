@@ -3,7 +3,15 @@
 */
 
 .text
-.globl isr_table
+.globl isr_table, default_isr, do_task1, do_task2
+
+do_task1:
+	call task1_work
+	jmp do_task1
+
+do_task2:
+	call task2_work
+	jmp do_task2
 
 .macro isrnoerror nr
 isr\nr:
@@ -16,6 +24,13 @@ isr\nr:
 isr\nr:
 	pushl $\nr
 	jmp isr_comm
+.endm
+
+.macro irq nr
+irq\nr:
+	pushl $0
+	pushl $\nr
+	jmp irq_comm
 .endm
 
 isr_table:	.long divide_error, isr0x00, debug, isr0x01
@@ -34,7 +49,14 @@ isr_table:	.long divide_error, isr0x00, debug, isr0x01
 			.long reserved, isr0x1a, reserved, isr0x1b
 			.long reserved, isr0x1c, reserved, isr0x1d
 			.long reserved, isr0x1e, reserved, isr0x1f
-			.long do_timer, isr0x20, do_kb, isr0x21
+			.long do_timer, irq0x20, do_kb, irq0x21
+			.long default_isr, irq0x22, default_isr, irq0x23
+			.long default_isr, irq0x24, default_isr, irq0x25
+			.long default_isr, irq0x26, default_isr, irq0x27
+			.long default_isr, irq0x28, default_isr, irq0x29
+			.long default_isr, irq0x2a, default_isr, irq0x2b
+			.long default_isr, irq0x2c, default_isr, irq0x2d
+			.long default_isr, irq0x2e
 
 /*
 		+-----------+
@@ -103,6 +125,29 @@ isr_comm:
 		addl $8, %esp
 		iret
 
+irq_comm:
+		pushal
+		pushl	%ds
+		pushl	%es
+		pushl	%fs
+		pushl	%gs
+		pushl	%ss
+		movw	$0x10,%ax
+		movw	%ax,	%ds
+		movw	%ax,	%es
+		movw	%ax,	%fs
+		movw	%ax,	%gs
+		movl	52(%esp),%ecx
+		call	*isr_table(, %ecx, 8)
+		addl $4, %esp
+		popl %gs
+		popl %fs
+		popl %es
+		popl %ds
+		popal
+		addl $8, %esp
+		iret
+
 isrnoerror	0x00
 isrnoerror	0x01
 isrnoerror	0x02
@@ -135,5 +180,30 @@ isrnoerror	0x1c
 isrnoerror	0x1d
 isrnoerror	0x1e
 isrnoerror	0x1f
-isrnoerror	0x20
-isrnoerror	0x21
+irq 0x20
+irq 0x21
+irq 0x22
+irq 0x23
+irq 0x24
+irq 0x25
+irq 0x26
+irq 0x27
+irq 0x28
+irq 0x29
+irq 0x2a
+irq 0x2b
+irq 0x2c
+irq 0x2d
+irq 0x2e
+
+
+default_isr:
+	movl 56(%esp), %eax
+	subb $32, %al
+	addb $48, %al
+	movb %al, 0xb8000
+	movb $0xf, 0xb8001
+	movb $0x20, %al
+	outb %al, $0x20
+	outb %al, $0xa0
+	ret
