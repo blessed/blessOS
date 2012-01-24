@@ -3,7 +3,7 @@ INCLUDE_DIR = $(KERNEL_SRC)/include
 AS = as
 ASFLAGS = --32
 CC = gcc
-CFLAGS = -Wall -Wno-main -fomit-frame-pointer -m32 -pedantic -nostdinc -nostdlib -fno-builtin -I$(INCLUDE_DIR)
+CFLAGS = -Wall -Wextra -Wno-main -fomit-frame-pointer -m32 -nostdinc -nostdlib -fno-builtin -I$(INCLUDE_DIR)
 LDFLAGS = --oformat binary -mi386linux -Tscript.ld
 
 .PHONY: all clean
