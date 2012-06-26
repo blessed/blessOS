@@ -1,5 +1,6 @@
 #include "kernel/sched.h"
 #include <kernel/mem.h>
+#include <mm/paging.h>
 #include <kernel/printk.h>
 
 u32int user_stack[PAGE_SIZE >> 2];
@@ -9,6 +10,8 @@ struct {
 } stack_start = { &user_stack[PAGE_SIZE >> 2], 0x10 };
 
 static u32int task0_stack0[PAGE_SIZE >> 2];
+
+extern page_directory_t *kernel_directory;
 
 struct task_struct task0 = {
 	/* tss */
@@ -137,8 +140,11 @@ void schedule(void)
 
 void sched_init(void)
 {
+	task0.tss.cr3 = (u32int)kernel_directory->tablesPhysical;
+
 	set_tss_desc(gdt + FIRST_TSS_SEL, (u32int)&task0.tss);
 	set_ldt_desc(gdt + FIRST_LDT_SEL, (u32int)&task0.ldt);
+
 	__asm__("ltrw %%ax\n\t" ::"a"(TSS(0)));
 	__asm__("lldt %%ax\n\t" ::"a"(LDT(0)));
 	new_task(&task1, (u32int)do_task1,

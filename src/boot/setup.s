@@ -94,7 +94,8 @@ start_main:
 	pushl $0
 	pushl $boom
 	pushl $main
-	jmp setup_paging
+#jmp setup_paging
+	call main
 
 .align 2
 setup_paging:
@@ -135,8 +136,8 @@ gdt_descr:
 
 gdt:
 	.quad 0x00
-	.quad 0x00C09A00000007FF
-	.quad 0x00C09200000007FF
+	.quad 0x00C09A0000000FFF
+	.quad 0x00C0920000000FFF
 	.quad 0x00
 	.fill 252,8,0
 

@@ -1,3 +1,4 @@
+#include <kernel/system.h>
 #include <kernel/console.h>
 #include <kernel/printk.h>
 
@@ -47,6 +48,8 @@ void printk(enum KP_LEVEL kl, const char *fmt, ...)
 {
 	int i = 0;
 	char *s;
+
+	cli();
 	
 	struct KPC_STRUCT {
 		COLOUR fg;
@@ -118,5 +121,7 @@ void printk(enum KP_LEVEL kl, const char *fmt, ...)
 	va_end(args);
 	for (i = 0; i < ptr; ++i)
 		print_c(buffer[i], KPL[kl].fg, KPL[kl].bg);
+
+	sti();
 }
 

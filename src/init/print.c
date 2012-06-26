@@ -31,16 +31,17 @@ void pause(void)
 void main(void)
 {
 	char wheel[] = { '\\', '|', '/', '-' };
-	char *videoram = (char *)0xb8000;
 	int i;
-	int count = 0;
 
-	initialize_paging();
+	initialise_paging();
 	console_init();
 	pic_install();
 	traps_init();
 	timer_install(100);
 	kb_install();
+	
+	printk(KPL_DUMP, "The gdt is at 0x%x\n", gdt);
+	
 	sched_init();
 
 	sti();

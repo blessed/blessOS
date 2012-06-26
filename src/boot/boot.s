@@ -5,7 +5,7 @@ INITSEG equ 0x9000
 SYSSEG  equ 0x1000
 SYSSIZE equ 0x7000
 
-; first let's move the boot code out of the way, so it won't
+; first let's move the boot code out of the way (576kB), so it won't
 ; be overwritten by the kernel code that is loaded at 0x1000
 move_boot:
 	mov ax,BOOTSEG
@@ -18,14 +18,14 @@ move_boot:
 	rep
 	movsw
 
-	jmp INITSEG:start ; code is copied, jump to it
+	jmp INITSEG:start ; code is copied, jump to address 0x90000+start = 16*0x9000 + start
 
 start:
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
 	mov ss,ax
-	mov sp,0x400 ; stack is 512KB away from the data
+	mov sp,0x400 ; stack is 512KB away from the data - plenty
 	; print a message to the screen
 	mov si,msg
 	call putstr
@@ -43,7 +43,7 @@ start:
 
 	cli
 
-; Moves the system to 0x0. This overwrites the standard idt
+; Moves the system to 0x0. This overwrites the standard idt - fuck BIOS :-)
 	mov ax,0x0000
 	cld ; 'direction'=0, movs moves forward
 move_kernel:
@@ -134,7 +134,7 @@ track dw 0
 
 load_kernel:
 	mov ax, es
-	test ax, 0x0fff	; check if it's on segment boundary (64Kb)
+	test ax, 0x0fff	; check if it's on segment boundary (64KB)
 
 .die:
 	jne .die

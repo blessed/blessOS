@@ -22,13 +22,16 @@ void do_timer(void)
 	int x, y;
 	struct task_struct *v = &task0;
 
+	cli();
+
 	++timer_ticks;
 	get_cursor(&x, &y);
 	set_cursor(71, 24);
 	printk(KPL_DUMP, "%x", timer_ticks);
 	set_cursor(x, y);
+
 	outb(0x20, 0x20);
-	cli();
+
 	for (; v; v=v->next)
 	{
 		if (v->state == TS_RUNNING)
@@ -39,6 +42,7 @@ void do_timer(void)
 		else
 			v->priority -= 10;
 	}
+
 	schedule();
 	sti();
 }

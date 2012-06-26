@@ -12,13 +12,18 @@ KERNEL_SRC = /home/blessed/Programowanie/blessOS/original/src
 
 OBJECTS = boot/setup.o init/print.o kernel/printk.o kernel/console.o \
 			 kernel/sched.o kernel/mem.o kernel/exceptions.o kernel/isr.o \
-			 kernel/keyboard.o kernel/timer.o kernel/paging.o kernel/kheap.o
+			 kernel/keyboard.o kernel/timer.o kernel/kheap.o kernel/paging.o
+
+DISASMS = $(OBJECTS:.o=.disasm)
 
 %.o : %.s
 	@$(AS) $(ASFLAGS) $< -o $@
 
 %.o : %.c
 	@$(CC) $(CFLAGS) -c $< -o $@
+
+%.disasm : %.o
+	@objdump -DSr $< > $@
 
 # kernel config
 setup: boot/setup.o
@@ -28,12 +33,16 @@ setup: boot/setup.o
 main: $(OBJECTS)
 	@$(LD) $(LDFLAGS) $^ -o $@ -M > main.map
 
-all: main image
+all: main image disasm
 	@echo -n "Writing to floppy... "
 	@echo "Done"
 
 image:
 	dd of=floppy.img if=main bs=1 seek=512
+
+disasm: $(DISASMS)
+	@echo -n "Generating disassembled files... "
+	@echo "Done"
 
 clean:
 	@echo -n "Cleaning... "
