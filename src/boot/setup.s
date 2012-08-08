@@ -94,7 +94,7 @@ start_main:
 	pushl $0
 	pushl $boom
 	pushl $main
-#jmp setup_paging
+	jmp setup_paging
 	call main
 
 .align 2

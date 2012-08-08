@@ -1,13 +1,14 @@
 #include <asm/io.h>
 #include <kernel/system.h>
 #include <kernel/console.h>
+#include <kernel/config.h>
 #include <kernel/printk.h>
 #include <kernel/timer.h>
 #include <kernel/isr.h>
 #include <kernel/keyboard.h>
 #include <kernel/exceptions.h>
 #include <kernel/sched.h>
-#include <mm/paging.h>
+#include <mm/memory.h>
 
 static void pic_install(void)
 {
@@ -33,18 +34,26 @@ void main(void)
 	char wheel[] = { '\\', '|', '/', '-' };
 	int i;
 
-	initialise_paging();
+	//initialise_paging();
 	console_init();
 	pic_install();
 	traps_init();
-	timer_install(100);
+	timer_install(HZ);
 	kb_install();
 	
 	printk(KPL_DUMP, "The gdt is at 0x%x\n", gdt);
+	page_t *page = get_free_page();
+	printk(KPL_DUMP, "Got free page at %d\n", (u32int)page);
+	put_page(page, 0x200000);
 	
 	sched_init();
 
 	sti();
+
+	u32int *test = 0x200000;
+	*test = 0xb119b00b;
+	test = 0x500000;
+	*test = 0xdeadbeef;
 
 	for(;;)
 	{

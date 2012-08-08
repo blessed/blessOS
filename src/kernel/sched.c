@@ -140,16 +140,16 @@ void schedule(void)
 
 void sched_init(void)
 {
-	task0.tss.cr3 = (u32int)kernel_directory->tablesPhysical;
+	//task0.tss.cr3 = (u32int)kernel_directory->tablesPhysical;
 
 	set_tss_desc(gdt + FIRST_TSS_SEL, (u32int)&task0.tss);
 	set_ldt_desc(gdt + FIRST_LDT_SEL, (u32int)&task0.ldt);
 
 	__asm__("ltrw %%ax\n\t" ::"a"(TSS(0)));
 	__asm__("lldt %%ax\n\t" ::"a"(LDT(0)));
-	new_task(&task1, (u32int)do_task1,
-			(u32int)task1_stack0 + sizeof task1_stack0, (u32int)task1_stack3 + sizeof task1_stack3);
-	new_task(&task2, (u32int)do_task2,
-			(u32int)task2_stack0 + sizeof task2_stack0, (u32int)task2_stack3 + sizeof task2_stack3);
+	/* new_task(&task1, (u32int)do_task1,
+			(u32int)task1_stack0 + sizeof task1_stack0, (u32int)task1_stack3 + sizeof task1_stack3); */
+	/* new_task(&task2, (u32int)do_task2,
+			(u32int)task2_stack0 + sizeof task2_stack0, (u32int)task2_stack3 + sizeof task2_stack3); */
 }
 

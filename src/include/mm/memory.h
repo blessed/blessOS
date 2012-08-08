@@ -26,6 +26,8 @@ typedef struct page_dir
 } page_dir_t;
 
 u32int* get_free_page(void);
+u32int put_page(u32int page, u32int address);
+void no_page(u32int error, u32int address);
 void switch_page_dir(page_dir_t *dir);
 
 #endif /* MEMORY_H */

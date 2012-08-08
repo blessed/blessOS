@@ -4,6 +4,7 @@
 #include <kernel/console.h>
 #include <kernel/keyboard.h>
 #include <asm/io.h>
+#include <kernel/cyclic_buffer.h>
 
 unsigned char kbdus[128] =
 {
@@ -45,6 +46,8 @@ unsigned char kbdus[128] =
     0,	/* All other keys are undefined */
 };
 
+circular_buf_t keyboard_buf;
+
 void
 do_kb(void)
 {
@@ -59,12 +62,18 @@ do_kb(void)
 	{
 		print_c(kbdus[scancode], BRIGHT_WHITE, BLACK);
 	}
+
+	if (scancode == 28)
+		printk(KPL_DUMP, "%s:%d: there are %d elements in buffer\n", __FILE__, __LINE__, cb_get_count(&keyboard_buf));
 	
 	outb(0xA0, 0x20);
 	outb(0x20, 0x20);
 }
 
 void
-kb_install(void) {
+kb_install(void)
+{
 	outb(inb(0x21)&0xfd, 0x21);
+	BOCHS_DEBUG();
+	cb_init(&keyboard_buf);
 }

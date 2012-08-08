@@ -2,6 +2,7 @@
 #include <kernel/printk.h>
 #include <kernel/sched.h>
 #include <mm/memory.h>
+#include <kernel/isr.h>
 
 static u16int mem_map[PAGING_PAGES];
 
@@ -20,6 +21,8 @@ u32int* get_free_page(void)
 	if (i < 0)
 		return NULL;
 
+	mem_map[i] = 1;
+
 	/* return the physical addr of page based on the mem_map vector index */
 	return (u32int *)((i << 12) + LOW_MEM);
 }
@@ -32,7 +35,7 @@ u32int put_page(u32int page, u32int address)
 	if (page < LOW_MEM || page > HIGH_MEM)
 		printk(KPL_PANIC, "Trying to put page %p at %p\n", page, address);
 
-	if (mem_map[page - LOW_MEM] != 1)
+	if (mem_map[(page - LOW_MEM) >> 12] != 1)
 		printk(KPL_PANIC, "mem_map disagrees with %p at %p\n", page, address);
 
 	/* Check if the page dir entry for address is present
@@ -52,7 +55,7 @@ u32int put_page(u32int page, u32int address)
 		*page_dir_entry = tmp | 7;
 		page_table = (u32int *)tmp;
 	}
-
+	
 	page_table[(address >> 12) & 0x3ff] = page | 7;
 
 	printk(KPL_DUMP, "Put page was successful\n");
@@ -69,9 +72,4 @@ void no_page(u32int error, u32int address)
 			return;
 
 	printk(KPL_PANIC, "Couldn't allocate new page!!!\n");
-}
-
-void do_page_fault(void)
-{
-	printk(KPL_DUMP, "Dupa\n");
 }

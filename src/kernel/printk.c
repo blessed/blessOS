@@ -1,6 +1,7 @@
 #include <kernel/system.h>
 #include <kernel/console.h>
 #include <kernel/printk.h>
+#include <kernel/common.h>
 
 typedef char* va_list; /* variable list of arguments */
 
@@ -99,10 +100,13 @@ void printk(enum KP_LEVEL kl, const char *fmt, ...)
 					buffer[ptr++] = *s++;
 				break;
 			case 'c':
-				buffer[ptr++] = (char)va_next(args, int);
+				buffer[ptr++] = (char)va_next(args, char);
 				break;
 			case 'x':
 				parse_hex((unsigned long)va_next(args, unsigned long));
+				break;
+			case 'p':
+				parse_hex((u32int)va_next(args, u32int));
 				break;
 			case 'd':
 				parse_num((unsigned long)va_next(args, unsigned long), 10);

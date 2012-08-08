@@ -5,7 +5,7 @@ INITSEG equ 0x9000
 SYSSEG  equ 0x1000
 SYSSIZE equ 0x7000
 
-; first let's move the boot code out of the way (576kB), so it won't
+; first let's move the boot code out of the way (to 576kB), so it won't
 ; be overwritten by the kernel code that is loaded at 0x1000
 move_boot:
 	mov ax,BOOTSEG

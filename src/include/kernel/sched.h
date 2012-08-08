@@ -60,6 +60,8 @@ struct task_struct
 
 struct desc_struct set_tss_ldt_desc(char *gdt_dest, u32int addr, u8int type);
 
+extern struct task_struct *current;
+
 void sched_init(void);
 void schedule(void);
 
