@@ -13,7 +13,7 @@ typedef struct circular_buf
 } circular_buf_t;
 
 void cb_init(circular_buf_t *buf);
-s8int cb_push(u8int *element, circular_buf_t *buf);
+s8int cb_push(u8int element, circular_buf_t *buf);
 u8int cb_pop(circular_buf_t *buf);
 void cb_clear(circular_buf_t *buf);
 int cb_is_full(circular_buf_t *buf);

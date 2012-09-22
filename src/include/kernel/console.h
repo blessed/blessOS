@@ -2,7 +2,7 @@
 #define _CONSOLE_H_
 
 #define VIDEORAM_START	0xB8000
-#define VIDEORAM_END	0xC0000
+#define VIDEORAM_END	0xC0000 /* VRAM is 32KiB long */
 
 #define LINES			25
 #define COLUMNS 		80
@@ -24,6 +24,7 @@ void print_c(char c, COLOUR fg, COLOUR bg);
 
 void set_cursor(int x, int y);
 void get_cursor(int *x, int *y);
+void set_origin(void);
 
 void console_init(void);
 

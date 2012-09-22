@@ -42,9 +42,9 @@ void main(void)
 	kb_install();
 	
 	printk(KPL_DUMP, "The gdt is at 0x%x\n", gdt);
-	page_t *page = get_free_page();
+	u32int *page = get_free_page();
 	printk(KPL_DUMP, "Got free page at %d\n", (u32int)page);
-	put_page(page, 0x200000);
+	put_page((u32int)page, 0x200000);
 	
 	sched_init();
 
@@ -54,6 +54,10 @@ void main(void)
 	*test = 0xb119b00b;
 	test = 0x500000;
 	*test = 0xdeadbeef;
+
+	BOCHS_DEBUG();
+
+	calc_mem();
 
 	for(;;)
 	{

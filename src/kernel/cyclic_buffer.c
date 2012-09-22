@@ -9,7 +9,7 @@ void cb_init(circular_buf_t *buf)
 	buf->tail = 0;
 }
 
-s8int cb_push(u8int *element, circular_buf_t *buf)
+s8int cb_push(u8int element, circular_buf_t *buf)
 {
 	if (cb_is_full(buf) == 1)
 	{
@@ -17,7 +17,7 @@ s8int cb_push(u8int *element, circular_buf_t *buf)
 		return -1;
 	}
 
-	buf->data[buf->head++] = *element;
+	buf->data[buf->head++] = element;
 
 	return 0;
 }
@@ -31,7 +31,7 @@ u8int cb_pop(circular_buf_t *buf)
 	}
 
 	if (cb_is_empty(buf))
-		return NULL;
+		return (u8int)-1;
 
 	return buf->data[buf->tail++];
 }

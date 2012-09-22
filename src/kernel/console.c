@@ -2,13 +2,85 @@
 #include <kernel/console.h>
 #include <asm/io.h>
 #include <kernel/mem.h>
+#include <kernel/system.h>
 
 /* cursor position */
-static int csr_x, csr_y;
+static int csr_x, csr_y; /* in character, line units (canonical units) */
+static u32int position = VIDEORAM_START; /* in memory units */
+static u32int origin = VIDEORAM_START; /* The memory address the CRT controller should use while refreshing */
+static u32int scr_end = VIDEORAM_START + COLUMNS * LINES * 2; /* As above but it's the bottom */
+static u32int top = 0, bottom = LINES; /* top and bottom of screen in canonical units */
 
-/* something is fucked up with the scroll_down procedure.
- * gotta look into this in detail
- */
+static void scroll_up(void)
+{
+	if (!top && bottom == LINES)
+	{
+		position += COLUMNS * 2;
+		origin += COLUMNS * 2;
+		scr_end += COLUMNS * 2;
+
+		if (scr_end > VIDEORAM_END)
+		{
+			asm("cld\n\t"
+					"rep\n\t"
+					"movsl\n\t"
+					"movl %%ebx, %1\n\t"
+					"rep\n\t"
+					"stosw"
+					:: "a"(0x0720),
+					"c"((LINES - 1) * COLUMNS >> 1),
+					"D"(VIDEORAM_START),
+					"S"(origin),
+					"b"(COLUMNS));
+
+			scr_end -= origin - VIDEORAM_START;
+			position -= origin - VIDEORAM_START;
+			origin = VIDEORAM_START;
+		}
+		else
+		{
+			asm("cld\n\t"
+					"rep\n\t"
+					"stosl"
+					:: "a"(0x07200720),
+					"c"(COLUMNS >> 1),
+					"D"(scr_end - (COLUMNS << 1)));
+		}
+
+		set_origin();
+	} else
+	{
+		asm("cld\n\t"
+				"rep\n\t"
+				"movsl\n\t"
+				"movl %%ebx, %%ecx\n\t"
+				"rep\n\t"
+				"stosw"
+				:: "a"(0x0720),
+				"c"((bottom - top - 1) * COLUMNS >> 1),
+				"D"(origin + (COLUMNS << 1) * top),
+				"S"(origin + (COLUMNS << 1) * (top + 1)),
+				"b"(COLUMNS));
+	}
+}
+
+/*
+static void scroll_down(void)
+{
+	asm("std\n\t"
+			"rep\n\t"
+			"movsl\n\t"
+			"addl $2, %%edi\n\t"
+			"movl %%ebx, %%ecx\n\t"
+			"rep\n\t"
+			"stosw"
+			:: "a"(0x0720),
+			"b"(COLUMNS),
+			"c"((bottom - top - 1) * COLUMNS >> 1),
+			"D"(origin + (COLUMNS << 1) * bottom - 4),
+			"S"(origin + (COLUMNS << 1) * (bottom - 1) - 4));
+}
+*/
 
 static void scroll_down(void)
 {
@@ -25,6 +97,7 @@ static void scroll_down(void)
 		vga_mem[COLUMNS * (LINES - 1) + i] = blank;
 	}
 }
+
 
 void clear_screen(void)
 {
@@ -54,6 +127,21 @@ void get_cursor(int *x, int *y)
 {
 	*x = csr_x;
 	*y = csr_y;
+}
+
+void set_origin(void)
+{
+	cli();
+
+	/* Send first byte divided by 2. The address is relative to the start */
+	outb(0x0c, 0x3d4);
+	outb(0xff & ((origin - VIDEORAM_START) >> 9), 0x3d5);
+
+	/* Second byte / 2 */
+	outb(0x0d, 0x3d4);
+	outb(0xff & ((origin - VIDEORAM_START) >> 1), 0x3d5);
+
+	sti();
 }
 
 void print_c(char c, COLOUR fg, COLOUR bg)

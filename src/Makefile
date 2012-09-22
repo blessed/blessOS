@@ -13,7 +13,7 @@ KERNEL_SRC = /home/blessed/Programowanie/blessOS/original/src
 OBJECTS = boot/setup.o init/print.o kernel/printk.o kernel/console.o \
 			 kernel/sched.o kernel/mem.o kernel/exceptions.o kernel/isr.o \
 			 kernel/keyboard.o kernel/timer.o kernel/kheap.o mm/memory.o \
-			 kernel/cyclic_buffer.o
+			 kernel/cyclic_buffer.o kernel/tty.o
 
 DISASMS = $(OBJECTS:.o=.disasm)
 

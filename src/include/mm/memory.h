@@ -29,5 +29,7 @@ u32int* get_free_page(void);
 u32int put_page(u32int page, u32int address);
 void no_page(u32int error, u32int address);
 void switch_page_dir(page_dir_t *dir);
+void free_page(u32int address);
+int free_page_tables(u32int from, u32int size);
 
 #endif /* MEMORY_H */
