@@ -9,6 +9,7 @@ void cb_init(circular_buf_t *buf)
 	buf->tail = 0;
 }
 
+/* Here the buffer is being overflown after a while */
 s8int cb_push(u8int element, circular_buf_t *buf)
 {
 	if (cb_is_full(buf) == 1)
@@ -18,12 +19,15 @@ s8int cb_push(u8int element, circular_buf_t *buf)
 	}
 
 	buf->data[buf->head++] = element;
+	buf->head = buf->head & (CIRC_BUFF_SIZE - 1);
 
 	return 0;
 }
 
 u8int cb_pop(circular_buf_t *buf)
 {
+	u8int temp;
+
 	if (!buf)
 	{
 		printk(KPL_PANIC, "%s:%s: buffer is NULL\n", __FILE__, __LINE__);
@@ -33,7 +37,9 @@ u8int cb_pop(circular_buf_t *buf)
 	if (cb_is_empty(buf))
 		return (u8int)-1;
 
-	return buf->data[buf->tail++];
+	temp = buf->data[buf->tail++];
+	buf->tail = buf->tail & (CIRC_BUFF_SIZE - 1);
+	return temp;
 }
 
 int cb_is_full(circular_buf_t *buf)

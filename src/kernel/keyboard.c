@@ -12,8 +12,8 @@ extern tty_t main_tty;
 /* Muahahahaha! Try to guess all the keys... The me from the past was a mean bastard :> */
 static keytype_t keytable[255] = {
 	KT_NONE, [1 ... 28] = KT_NORMAL, KT_LCTRL,
-	[0x1e ... 0x29] = KT_NORMAL, KT_LSHIFT, [0x2b ... 0x34] = KT_NORMAL,
-	KT_MINUS, KT_RSHIFT, KT_NORMAL, 
+	[0x1e ... 0x29] = KT_NORMAL, KT_LSHIFT, [0x2b ... 0x35] = KT_NORMAL,
+	KT_RSHIFT, KT_NORMAL, 
 	KT_ALT, KT_NORMAL, KT_CAPSLOCK,
 	[0x3b ... 0x44] = KT_FUNC, KT_NUMLOCK, KT_SCROLL,
 	[0x47 ... 0x48] = KT_CURSOR, KT_NORMAL, [0x4b ... 0x4d] = KT_CURSOR,
@@ -142,6 +142,7 @@ do_kb(void)
 				do_tty_interrupt(&main_tty);
 				break;
 
+			case KT_RSHIFT:
 			case KT_LSHIFT:
 				key_mode |= KM_LSHIFT;
 				break;
@@ -157,15 +158,7 @@ do_kb(void)
 			default:
 				break;
 		}
-
-		//cb_push(&scancode, &keyboard_buf);
-
-		//print_c(kbdus[scancode], BRIGHT_WHITE, BLACK);
 	}
-
-	scancode = cb_pop(&main_tty.read_queue);
-	if (scancode != (u8int)-1)
-		printk(KPL_DUMP, "Got scancode %d(%c), type %d\n", scancode & ~0x80, scancode & ~0x80, keytable[scancode]);
 	
 	outb(0xA0, 0x20);
 	outb(0x20, 0x20);

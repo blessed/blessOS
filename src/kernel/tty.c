@@ -72,6 +72,8 @@ void parse_key(tty_t *tty)
 				cb_push(c, &tty->write_queue);
 			} else if (c >= 32)
 				cb_push(c, &tty->write_queue);
+			else if (c == '\b')
+				cb_push(c, &tty->write_queue);
 
 			tty->write(tty);
 		}
