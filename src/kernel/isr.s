@@ -3,7 +3,7 @@
 */
 
 .text
-.globl isr_table, default_isr, do_task1, do_task2, do_page_fault
+.globl isr_table, default_isr, do_task1, do_task2, do_page_fault, hd_interrupt
 
 do_task1:
 	call task1_work
@@ -40,7 +40,7 @@ isr_table:	.long divide_error, isr0x00, debug, isr0x01
 			.long double_fault, isr0x08, reserved, isr0x09
 			.long invalid_TSS, isr0x0a, segment_not_present, isr0x0b
 			.long stack_exception, isr0x0c, general_protection, isr0x0d
-			.long do_page_fault, do_page_fault, reserved, isr0x0f
+			.long do_page_fault, isr0x0e, reserved, isr0x0f
 			.long coprocessor_error, isr0x10, reserved, isr0x11
 			.long reserved, isr0x12, reserved, isr0x13
 			.long reserved, isr0x14, reserved, isr0x15
@@ -56,7 +56,7 @@ isr_table:	.long divide_error, isr0x00, debug, isr0x01
 			.long default_isr, irq0x28, default_isr, irq0x29
 			.long default_isr, irq0x2a, default_isr, irq0x2b
 			.long default_isr, irq0x2c, default_isr, irq0x2d
-			.long default_isr, irq0x2e
+			.long hd_interrupt, irq0x2e
 
 /*
 		+-----------+
@@ -209,8 +209,8 @@ default_isr:
 	movl 56(%esp), %eax
 	subb $32, %al
 	addb $48, %al
-	movb %al, 0xb8000
-	movb $0xf, 0xb8001
+	movb %al, 0xb8008
+	movb $0xf, 0xb8009
 	movb $0x20, %al
 	outb %al, $0x20
 	outb %al, $0xa0

@@ -2,6 +2,7 @@
 #include <kernel/console.h>
 #include <kernel/printk.h>
 #include <kernel/isr.h>
+#include <asm/io.h>
 
 void divide_error(void)
 {
@@ -132,6 +133,11 @@ void info(enum KP_LEVEL kl,
 	printk(kl, "Segment Registers:\n=======================\n");
 	printk(kl, "ds:\t%x\tes:\t%x\n", ds, es);
 	printk(kl, "fs:\t%x\tgs:\t%x\n", fs, gs);
+}
+
+void EOI(void)
+{
+	outb(0x20, 0x20);
 }
 
 void traps_init(void)

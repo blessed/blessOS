@@ -8,6 +8,8 @@
 #include <kernel/keyboard.h>
 #include <kernel/exceptions.h>
 #include <kernel/sched.h>
+#include <drivers/hd.h>
+#include <drivers/pata.h>
 #include <mm/memory.h>
 
 static void pic_install(void)
@@ -40,6 +42,7 @@ void main(void)
 	traps_init();
 	timer_install(HZ);
 	kb_install();
+	initialize_pata();
 	
 	printk(KPL_DUMP, "The gdt is at 0x%x\n", gdt);
 	u32int *page = get_free_page();
@@ -55,9 +58,33 @@ void main(void)
 	test = 0x500000;
 	*test = 0xdeadbeef;
 
-	BOCHS_DEBUG();
+	//printk(KPL_DUMP, "About to read from disk\n");
+	//BOCHS_DEBUG();
+	
+	reset_hd_controller();
 
-	calc_mem();
+	hd_request_t *req;
+	buffer_head_t buffer;
+	BOCHS_DEBUG();
+	char *buf = kmalloc(512);
+	memset(buf, 0x33, 512);
+	BOCHS_DEBUG();
+	buffer.block_data = buf;
+	req = create_request(0, 2, 2, 1, 1, HD_REQUEST_TYPE_WRITE, &buffer);
+	add_request_to_queue(&pending_requests, req);
+	submit_request();
+	//remove_request_from_queue(&pending_requests);
+
+	//outb(inb(0x21) & 0xfb, 0x21);
+	//outb(inb(0xa1) & 0xbf, 0xa1);
+	//outb(0xa0, ATA_PRI_HEAD);
+	//reset_hd_controller();
+	//printk(KPL_DUMP, "Reset the controller, now reading\n");
+	//hd_rw(0, 2, 6, 2, 1, 0x20);
+
+	//BOCHS_DEBUG();
+
+	//calc_mem();
 
 	for(;;)
 	{

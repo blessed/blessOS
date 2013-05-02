@@ -11,10 +11,14 @@
 
 #define NR_TASKS 64
 
+typedef int (*fnptr)(void);
+
 enum TASK_STATE {
 	TS_RUNNING,
 	TS_RUNABLE,
-	TS_STOPPED
+	TS_STOPPED,
+	TS_UNINTERRUPTIBLE,
+	TS_INTERRUPTIBLE
 };
 
 struct tss_struct
@@ -52,6 +56,8 @@ struct task_struct
 	struct tss_struct tss;
 	struct desc_struct tss_entry;
 	u8int priority;
+	u32int signal;
+	fnptr signal_handler[32];
 	enum TASK_STATE state;
 	struct desc_struct ldt[2]; /* 0 - cs; 1 - ds && ss */
 	struct desc_struct ldt_entry;
@@ -64,5 +70,8 @@ extern struct task_struct *current;
 
 void sched_init(void);
 void schedule(void);
+
+void sleep_on(struct task_struct **task);
+void wake_up(struct task_struct **task);
 
 #endif /* SCHED_H_ */

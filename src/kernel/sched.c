@@ -26,6 +26,8 @@ struct task_struct task0 = {
 	},
 	{ 0, 0 }, /* tss_entry */
 	INITIAL_PRIO, /* priority */
+	0, /* signal */
+	{ NULL, },
 	TS_RUNNING, /* state */
 	/* ldt: 0-code; 1-data */
 	{
@@ -48,6 +50,7 @@ static u32int task2_stack3[1024];
 
 struct task_struct task1;
 struct task_struct task2;
+struct task_struct *task_suspend = NULL;
 
 static void new_task(struct task_struct *task, u32int eip,
 		u32int sp0, u32int sp3)
@@ -75,6 +78,8 @@ void task1_work(void)
 	printk(KPL_DUMP, "A");
 	for (i = 0; i < 1000; ++i)
 		__asm__ __volatile__("nop");
+
+	sleep_on(&task_suspend);
 }
 
 void task2_work(void)
@@ -113,12 +118,18 @@ struct desc_struct get_ldt(void)
 
 void schedule(void)
 {
+	cli();
+	
 	struct task_struct *v = &task0, *tmp = 0;
 	int cp = current->priority;
+	//if (current->state != TS_RUNNING)
+	//	cp = -1;
+	//else
+	//	cp = current->priority;
 
-	for (; v; v = v->next)
+	for (v = &task0; v; v = v->next)
 	{
-		if ((v->state == TS_RUNABLE) && (cp > v->priority))
+		if ((v->state == TS_RUNABLE) && (cp < v->priority))
 		{
 			tmp = v;
 			cp = v->priority;
@@ -131,10 +142,51 @@ void schedule(void)
 		current->ldt_entry = get_ldt();
 		tmp->tss_entry = set_tss_desc(gdt + FIRST_TSS_SEL, (u32int)&tmp->tss);
 		tmp->ldt_entry = set_ldt_desc(gdt + FIRST_LDT_SEL, (u32int)&tmp->ldt);
-		current->state = TS_RUNABLE;
+		if (current->state == TS_RUNNING)
+			current->state = TS_RUNABLE;
 		tmp->state = TS_RUNNING;
 		current = tmp;
 		__asm__ __volatile__ ("ljmp $0x20, $0\n\t");
+	}
+
+	sti();
+}
+
+void sleep_on(struct task_struct **task)
+{
+	struct task_struct *tmp;
+
+	if (!task)
+	{
+		printk(KPL_PANIC, "Fuck this shit\n");
+		return;
+	}
+
+	if (current == &task0)
+	{
+		printk(KPL_PANIC, "Trying to sleep the init task!\n");
+		halt();
+	}
+
+	tmp = *task;
+	printk(KPL_DUMP, "tmp = %p, current = %p\n", tmp, current);
+	BOCHS_DEBUG();
+	*task = current;
+	current->state = TS_UNINTERRUPTIBLE;
+	current->priority = 0;
+	schedule();
+	if (tmp)
+	{
+		tmp->state = TS_RUNNING;
+	}
+}
+
+void wake_up(struct task_struct **task)
+{
+	if (task && *task)
+	{
+		(*task)->state = TS_RUNNING;
+		*task = NULL;
 	}
 }
 
@@ -147,9 +199,11 @@ void sched_init(void)
 
 	__asm__("ltrw %%ax\n\t" ::"a"(TSS(0)));
 	__asm__("lldt %%ax\n\t" ::"a"(LDT(0)));
-	/* new_task(&task1, (u32int)do_task1,
-			(u32int)task1_stack0 + sizeof task1_stack0, (u32int)task1_stack3 + sizeof task1_stack3); */
-	/* new_task(&task2, (u32int)do_task2,
-			(u32int)task2_stack0 + sizeof task2_stack0, (u32int)task2_stack3 + sizeof task2_stack3); */
+	/*
+	new_task(&task1, (u32int)do_task1,
+			(u32int)task1_stack0 + sizeof task1_stack0, (u32int)task1_stack3 + sizeof task1_stack3);
+	new_task(&task2, (u32int)do_task2,
+			(u32int)task2_stack0 + sizeof task2_stack0, (u32int)task2_stack3 + sizeof task2_stack3);
+	*/
 }
 
