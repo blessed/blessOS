@@ -21,16 +21,16 @@ void hd_interrupt(void)
 	hd_request_t *tmp = executing_requests.head;
 
 	printk(KPL_DUMP, "The completed request is:\n");
-	printk(KPL_DUMP, "drive %d, sect count %d, sector %d, head %d, cyl %d, type %d",
+	printk(KPL_DUMP, "drive %d, sect count %d, sector %d, head %d, cyl %d, type %d\n",
 			tmp->hd, tmp->nsector, tmp->sector, tmp->head, tmp->cyl, tmp->type);
 
+	/*
 	while (--tmp->nsector)
 	{
 		write_to_port(tmp->bh->block_data, ATA_PRI_DATA, 256);
 		return;
 	}
-
-	EOI();
+	*/
 
 	/* TODO: Need to be finished, bh updated and furhter request submitted */
 }

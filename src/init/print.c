@@ -11,6 +11,9 @@
 #include <drivers/hd.h>
 #include <drivers/pata.h>
 #include <mm/memory.h>
+#include <mm/kheap.h>
+
+extern heap_t *kheap;
 
 static void pic_install(void)
 {
@@ -42,7 +45,6 @@ void main(void)
 	traps_init();
 	timer_install(HZ);
 	kb_install();
-	initialize_pata();
 	
 	printk(KPL_DUMP, "The gdt is at 0x%x\n", gdt);
 	u32int *page = get_free_page();
@@ -53,20 +55,22 @@ void main(void)
 
 	sti();
 
-	u32int *test = 0x200000;
+	u32int *test = (u32int *)0x200000;
 	*test = 0xb119b00b;
-	test = 0x500000;
+	test = (u32int *)0x500000;
 	*test = 0xdeadbeef;
 
 	//printk(KPL_DUMP, "About to read from disk\n");
 	//BOCHS_DEBUG();
 	
+	/*
 	reset_hd_controller();
+	initialize_pata();
 
 	hd_request_t *req;
 	buffer_head_t buffer;
 	BOCHS_DEBUG();
-	char *buf = kmalloc(512);
+	char *buf = (char *)kmalloc(512);
 	memset(buf, 0x33, 512);
 	BOCHS_DEBUG();
 	buffer.block_data = buf;
@@ -74,6 +78,23 @@ void main(void)
 	add_request_to_queue(&pending_requests, req);
 	submit_request();
 	//remove_request_from_queue(&pending_requests);
+	*/
+
+	int p;
+	for (p = KHEAP_START; p < KHEAP_START + KHEAP_INITIAL_SIZE; p += 0x1000)
+		put_page((u32int)get_free_page(), p);
+	
+	kheap = kheap = create_heap(KHEAP_START, KHEAP_START+KHEAP_INITIAL_SIZE, 0xCFFFF000);
+	BOCHS_DEBUG();
+	u32int *a = kmalloc(8);
+	BOCHS_DEBUG();
+	u32int *b = kmalloc(8);
+	BOCHS_DEBUG();
+	kfree(a);
+	kfree(b);
+	BOCHS_DEBUG();
+	u32int *c = kmalloc(0x100000);
+	BOCHS_DEBUG();
 
 	//outb(inb(0x21) & 0xfb, 0x21);
 	//outb(inb(0xa1) & 0xbf, 0xa1);

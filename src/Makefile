@@ -4,7 +4,8 @@ AS = as
 ASFLAGS = --32
 CC = gcc
 CFLAGS = -Wall -Wextra -Wno-main -fomit-frame-pointer -m32 -nostdinc -nostdlib -fno-builtin -I$(INCLUDE_DIR) -g
-LDFLAGS = --oformat binary -mi386linux -Tscript.ld
+#LDFLAGS = --oformat binary -mi386linux -Tscript.ld
+LDFLAGS = -Tscript.ld
 
 .PHONY: all clean
 
@@ -14,7 +15,7 @@ OBJECTS = boot/setup.o init/print.o kernel/printk.o kernel/console.o \
 			 kernel/sched.o kernel/mem.o kernel/exceptions.o kernel/isr.o \
 			 kernel/keyboard.o kernel/timer.o kernel/kheap.o mm/memory.o \
 			 kernel/cyclic_buffer.o kernel/tty.o drivers/buffer.o drivers/hd.o \
-			 drivers/pata.o
+			 drivers/pata.o kernel/ordered_array.o
 
 DISASMS = $(OBJECTS:.o=.disasm)
 
@@ -34,13 +35,14 @@ setup: boot/setup.o
 # kernel binary
 main: $(OBJECTS)
 	@$(LD) $(LDFLAGS) $^ -o $@ -M > main.map
+	objcopy -O binary $@ $@.bin 
 
 all: main image disasm
 	@echo -n "Writing to floppy... "
 	@echo "Done"
 
 image:
-	dd of=floppy.img if=main bs=1 seek=512
+	dd of=floppy.img if=main.bin bs=1 seek=512
 
 disasm: $(DISASMS)
 	@echo -n "Generating disassembled files... "

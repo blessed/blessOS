@@ -64,9 +64,40 @@ u32int put_page(u32int page, u32int address)
 	return page;
 }
 
+void remove_page(u32int addr)
+{
+	u32int *page_table;
+	u32int *page_dir_entry = (u32int *)((addr >> 20) &0xffc);
+
+	if (*page_dir_entry & 1)
+		page_table = (u32int *)(0xfffff000 & *page_dir_entry);
+	else
+		return;
+
+	if (page_table[(addr >> 12) & 0x3ff] & 1)
+	{
+		free_page(get_page_addr(addr));
+		page_table[(addr >> 12) & 0x3ff] = 0;
+	}
+}
+
+/* Returns a physical address of the page requested */
+u32int* get_page_addr(u32int addr)
+{
+	u32int *page_table;
+	u32int *page_dir_entry = (u32int *)((addr >> 20) & 0xffc);
+
+	if (*page_dir_entry & 1)
+		page_table = (u32int *)(0xfffff000 & *page_dir_entry);
+	else
+		return 0;
+
+	return (u32int *)(page_table[(addr >> 12) & 0x3ff] & ~7);
+}
+
 void free_page(u32int address)
 {
-	printk(KPL_DUMP, "%s: address = %d\n", __FUNCTION__, address);
+	printk(KPL_DUMP, "%s:%s: address = %x\n", __FILE__, __PRETTY_FUNCTION__, address);
 
 	if (address < LOW_MEM)
 		return;
@@ -78,7 +109,9 @@ void free_page(u32int address)
 	address >>= 12;
 
 	if (mem_map[address]--)
+	{
 		return;
+	}
 
 	mem_map[address] = 0;
 
